@@ -1,18 +1,18 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-interface IOpeningHours {
+export interface IOpeningHours {
   open: string;
   close: string;
 }
 
-interface ISpecialHour {
+export interface ISpecialHour {
   date: Date;
   open: string;
   close: string;
   reason?: string;
 }
 
-interface IStoreFeatures {
+export interface IStoreFeatures {
   parking: boolean;
   wifi: boolean;
   outdoorSeating: boolean;

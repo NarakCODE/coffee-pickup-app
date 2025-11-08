@@ -60,7 +60,7 @@
 
 ## Phase 2: Store & Product Management
 
-- [ ] 8. Implement store service and controller
+- [x] 8. Implement store service and controller
 
   - Create `src/services/storeService.ts` with getAllStores, getStoreById functions
   - Add distance calculation for location-based filtering

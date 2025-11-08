@@ -1,0 +1,145 @@
+import type { Request, Response } from 'express';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import * as storeService from '../services/storeService.js';
+import { BadRequestError } from '../utils/AppError.js';
+
+/**
+ * Get all stores with optional location-based filtering
+ * GET /api/stores
+ * Query params: latitude, longitude, radius (in km)
+ */
+export const getAllStores = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { latitude, longitude, radius } = req.query;
+
+    // Parse and validate location filters if provided
+    let filters;
+    if (latitude || longitude || radius) {
+      // Validate that all location params are provided together
+      if (!latitude || !longitude || !radius) {
+        throw new BadRequestError(
+          'Latitude, longitude, and radius must all be provided together'
+        );
+      }
+
+      const lat = parseFloat(latitude as string);
+      const lng = parseFloat(longitude as string);
+      const rad = parseFloat(radius as string);
+
+      // Validate numeric values
+      if (isNaN(lat) || isNaN(lng) || isNaN(rad)) {
+        throw new BadRequestError(
+          'Latitude, longitude, and radius must be valid numbers'
+        );
+      }
+
+      // Validate latitude range
+      if (lat < -90 || lat > 90) {
+        throw new BadRequestError('Latitude must be between -90 and 90');
+      }
+
+      // Validate longitude range
+      if (lng < -180 || lng > 180) {
+        throw new BadRequestError('Longitude must be between -180 and 180');
+      }
+
+      // Validate radius is positive
+      if (rad <= 0) {
+        throw new BadRequestError('Radius must be greater than 0');
+      }
+
+      filters = {
+        latitude: lat,
+        longitude: lng,
+        radius: rad,
+      };
+    }
+
+    const stores = await storeService.getAllStores(filters);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stores,
+        count: stores.length,
+      },
+    });
+  }
+);
+
+/**
+ * Get store by ID
+ * GET /api/stores/:id
+ */
+export const getStoreById = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const store = await storeService.getStoreById(id);
+
+    res.status(200).json({
+      success: true,
+      data: store,
+    });
+  }
+);
+
+/**
+ * Get store by slug
+ * GET /api/stores/slug/:slug
+ */
+export const getStoreBySlug = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { slug } = req.params;
+
+    if (!slug) {
+      throw new BadRequestError('Store slug is required');
+    }
+
+    const store = await storeService.getStoreBySlug(slug);
+
+    res.status(200).json({
+      success: true,
+      data: store,
+    });
+  }
+);
+
+/**
+ * Get available pickup times for a store
+ * GET /api/stores/:id/pickup-times
+ * Query params: date (optional, ISO string)
+ */
+export const getPickupTimes = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { date } = req.query;
+
+    if (!id) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    // Parse date if provided
+    let targetDate: Date | undefined;
+    if (date) {
+      targetDate = new Date(date as string);
+      if (isNaN(targetDate.getTime())) {
+        throw new BadRequestError('Invalid date format');
+      }
+    }
+
+    const pickupTimes = await storeService.getAvailablePickupTimes(
+      id,
+      targetDate
+    );
+
+    res.status(200).json({
+      success: true,
+      data: pickupTimes,
+    });
+  }
+);
