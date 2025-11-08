@@ -1,5 +1,24 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
+interface IOpeningHours {
+  open: string;
+  close: string;
+}
+
+interface ISpecialHour {
+  date: Date;
+  open: string;
+  close: string;
+  reason?: string;
+}
+
+interface IStoreFeatures {
+  parking: boolean;
+  wifi: boolean;
+  outdoorSeating: boolean;
+  driveThrough: boolean;
+}
+
 export interface IStore extends Document {
   name: string;
   slug: string;
@@ -14,35 +33,27 @@ export interface IStore extends Document {
   latitude: number;
   longitude: number;
   imageUrl?: string;
-  openingHours: {
-    monday?: { open: string; close: string };
-    tuesday?: { open: string; close: string };
-    wednesday?: { open: string; close: string };
-    thursday?: { open: string; close: string };
-    friday?: { open: string; close: string };
-    saturday?: { open: string; close: string };
-    sunday?: { open: string; close: string };
-  };
-  specialHours?: Array<{
-    date: Date;
-    open: string;
-    close: string;
-    reason?: string;
-  }>;
+  openingHours: Record<
+    | 'monday'
+    | 'tuesday'
+    | 'wednesday'
+    | 'thursday'
+    | 'friday'
+    | 'saturday'
+    | 'sunday',
+    IOpeningHours | undefined
+  >;
+  specialHours?: ISpecialHour[];
   isOpen: boolean;
   isActive: boolean;
   averagePrepTime: number;
   rating?: number;
   totalReviews: number;
-  features: {
-    parking: boolean;
-    wifi: boolean;
-    outdoorSeating: boolean;
-    driveThrough: boolean;
-  };
+  features: IStoreFeatures;
   managerId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+
   isOpenNow(): boolean;
   getPickupTimes(date?: Date): string[];
 }
@@ -61,44 +72,22 @@ const storeSchema = new Schema<IStore>(
       lowercase: true,
       trim: true,
     },
-    description: {
-      type: String,
-      trim: true,
-    },
+    description: { type: String, trim: true },
     address: {
       type: String,
       required: [true, 'Address is required'],
       trim: true,
     },
-    city: {
-      type: String,
-      required: [true, 'City is required'],
-      trim: true,
-    },
-    state: {
-      type: String,
-      required: [true, 'State is required'],
-      trim: true,
-    },
-    postalCode: {
-      type: String,
-      trim: true,
-    },
-    country: {
-      type: String,
-      default: 'Cambodia',
-      trim: true,
-    },
+    city: { type: String, required: [true, 'City is required'], trim: true },
+    state: { type: String, required: [true, 'State is required'], trim: true },
+    postalCode: { type: String, trim: true },
+    country: { type: String, default: 'Cambodia', trim: true },
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
       trim: true,
     },
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-    },
+    email: { type: String, trim: true, lowercase: true },
     latitude: {
       type: Number,
       required: [true, 'Latitude is required'],
@@ -111,10 +100,7 @@ const storeSchema = new Schema<IStore>(
       min: [-180, 'Longitude must be between -180 and 180'],
       max: [180, 'Longitude must be between -180 and 180'],
     },
-    imageUrl: {
-      type: String,
-      trim: true,
-    },
+    imageUrl: { type: String, trim: true },
     openingHours: {
       type: {
         monday: { open: String, close: String },
@@ -135,14 +121,8 @@ const storeSchema = new Schema<IStore>(
         reason: String,
       },
     ],
-    isOpen: {
-      type: Boolean,
-      default: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+    isOpen: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true },
     averagePrepTime: {
       type: Number,
       default: 15,
@@ -172,128 +152,105 @@ const storeSchema = new Schema<IStore>(
         driveThrough: false,
       },
     },
-    managerId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-    },
+    managerId: { type: Schema.Types.ObjectId, ref: 'User' },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Indexes
-storeSchema.index({ slug: 1 });
-storeSchema.index({ latitude: 1, longitude: 1 });
-storeSchema.index({ isActive: 1 });
-storeSchema.index({ createdAt: 1 });
+// ✅ Type-safe helper to parse time "HH:mm"
+const parseTimeToMinutes = (time: string): number => {
+  const [hourStr, minStr] = time.split(':');
+  const hour = Number(hourStr);
+  const min = Number(minStr);
+  if (isNaN(hour) || isNaN(min)) return 0;
+  return hour * 60 + min;
+};
 
-// Method to check if store is currently open
+// ✅ Check if store is currently open
 storeSchema.methods.isOpenNow = function (): boolean {
   const now = new Date();
   const dayOfWeek = now
     .toLocaleDateString('en-US', { weekday: 'long' })
-    .toLowerCase() as keyof typeof this.openingHours;
-
-  // Check special hours first
-  if (this.specialHours && this.specialHours.length > 0) {
-    const todaySpecial = this.specialHours.find((sh: any) => {
-      const specialDate = new Date(sh.date);
-      return (
-        specialDate.getDate() === now.getDate() &&
-        specialDate.getMonth() === now.getMonth() &&
-        specialDate.getFullYear() === now.getFullYear()
-      );
-    });
-
-    if (todaySpecial) {
-      const currentTime = now.getHours() * 60 + now.getMinutes();
-      const [openHour, openMin] = todaySpecial.open.split(':').map(Number);
-      const [closeHour, closeMin] = todaySpecial.close.split(':').map(Number);
-      const openTime = openHour * 60 + openMin;
-      const closeTime = closeHour * 60 + closeMin;
-
-      return currentTime >= openTime && currentTime < closeTime;
-    }
-  }
-
-  // Check regular hours
-  const todayHours = this.openingHours[dayOfWeek];
-  if (!todayHours || !todayHours.open || !todayHours.close) {
-    return false;
-  }
+    .toLowerCase() as keyof IStore['openingHours'];
 
   const currentTime = now.getHours() * 60 + now.getMinutes();
-  const [openHour, openMin] = todayHours.open.split(':').map(Number);
-  const [closeHour, closeMin] = todayHours.close.split(':').map(Number);
-  const openTime = openHour * 60 + openMin;
-  const closeTime = closeHour * 60 + closeMin;
 
+  // 1️⃣ Check special hours first
+  const todaySpecial = this.specialHours?.find((sh: ISpecialHour) => {
+    const specialDate = new Date(sh.date);
+    return (
+      specialDate.getDate() === now.getDate() &&
+      specialDate.getMonth() === now.getMonth() &&
+      specialDate.getFullYear() === now.getFullYear()
+    );
+  });
+
+  if (todaySpecial) {
+    const openTime = parseTimeToMinutes(todaySpecial.open);
+    const closeTime = parseTimeToMinutes(todaySpecial.close);
+    return currentTime >= openTime && currentTime < closeTime;
+  }
+
+  // 2️⃣ Check regular hours
+  const todayHours = this.openingHours[dayOfWeek];
+  if (!todayHours?.open || !todayHours?.close) return false;
+
+  const openTime = parseTimeToMinutes(todayHours.open);
+  const closeTime = parseTimeToMinutes(todayHours.close);
   return currentTime >= openTime && currentTime < closeTime;
 };
 
-// Method to generate available pickup time slots
+// ✅ Generate available pickup time slots
 storeSchema.methods.getPickupTimes = function (date?: Date): string[] {
   const targetDate = date || new Date();
   const dayOfWeek = targetDate
     .toLocaleDateString('en-US', { weekday: 'long' })
-    .toLowerCase() as keyof typeof this.openingHours;
+    .toLowerCase() as keyof IStore['openingHours'];
 
-  let openTime: string;
-  let closeTime: string;
+  const todayHours = this.openingHours[dayOfWeek];
+  const now = new Date();
 
-  // Check special hours first
-  if (this.specialHours && this.specialHours.length > 0) {
-    const specialHour = this.specialHours.find((sh: any) => {
-      const specialDate = new Date(sh.date);
-      return (
-        specialDate.getDate() === targetDate.getDate() &&
-        specialDate.getMonth() === targetDate.getMonth() &&
-        specialDate.getFullYear() === targetDate.getFullYear()
-      );
-    });
+  let openTimeStr: string | undefined;
+  let closeTimeStr: string | undefined;
 
-    if (specialHour) {
-      openTime = specialHour.open;
-      closeTime = specialHour.close;
-    } else {
-      const todayHours = this.openingHours[dayOfWeek];
-      if (!todayHours || !todayHours.open || !todayHours.close) {
-        return [];
-      }
-      openTime = todayHours.open;
-      closeTime = todayHours.close;
-    }
+  // Prefer special hours if available
+  const specialHour = this.specialHours?.find((sh: ISpecialHour) => {
+    const d = new Date(sh.date);
+    return (
+      d.getDate() === targetDate.getDate() &&
+      d.getMonth() === targetDate.getMonth() &&
+      d.getFullYear() === targetDate.getFullYear()
+    );
+  });
+
+  if (specialHour) {
+    openTimeStr = specialHour.open;
+    closeTimeStr = specialHour.close;
   } else {
-    const todayHours = this.openingHours[dayOfWeek];
-    if (!todayHours || !todayHours.open || !todayHours.close) {
-      return [];
-    }
-    openTime = todayHours.open;
-    closeTime = todayHours.close;
+    openTimeStr = todayHours?.open;
+    closeTimeStr = todayHours?.close;
   }
 
-  const [openHour, openMin] = openTime.split(':').map(Number);
-  const [closeHour, closeMin] = closeTime.split(':').map(Number);
+  // Guard: missing hours
+  if (!openTimeStr || !closeTimeStr) return [];
 
-  const slots: string[] = [];
-  const now = new Date();
+  const openMinutes = parseTimeToMinutes(openTimeStr);
+  const closeMinutes = parseTimeToMinutes(closeTimeStr);
+
   const isToday =
     targetDate.getDate() === now.getDate() &&
     targetDate.getMonth() === now.getMonth() &&
     targetDate.getFullYear() === now.getFullYear();
 
-  // Start time: either opening time or 15 minutes from now (whichever is later)
-  let startMinutes = openHour * 60 + openMin;
+  // Start time: opening or now + 15 minutes
+  let startMinutes = openMinutes;
   if (isToday) {
-    const nowMinutes = now.getHours() * 60 + now.getMinutes() + 15; // 15 minutes minimum
-    startMinutes = Math.max(startMinutes, nowMinutes);
+    const nowPlus15 = now.getHours() * 60 + now.getMinutes() + 15;
+    startMinutes = Math.max(startMinutes, nowPlus15);
   }
 
-  const endMinutes = closeHour * 60 + closeMin;
-
-  // Generate 15-minute intervals
-  for (let minutes = startMinutes; minutes < endMinutes; minutes += 15) {
+  const slots: string[] = [];
+  for (let minutes = startMinutes; minutes < closeMinutes; minutes += 15) {
     const hour = Math.floor(minutes / 60);
     const min = minutes % 60;
     slots.push(
@@ -304,12 +261,12 @@ storeSchema.methods.getPickupTimes = function (date?: Date): string[] {
   return slots;
 };
 
-// Transform to exclude sensitive data from JSON responses
 storeSchema.set('toJSON', {
-  transform: function (_doc, ret) {
-    ret.id = ret._id;
-    delete ret._id;
-    delete ret.__v;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transform: (_doc, ret: any) => {
+    ret.id = ret._id?.toString?.();
+    delete (ret as Record<string, unknown>)._id;
+    delete (ret as Record<string, unknown>).__v;
     return ret;
   },
 });
