@@ -38,6 +38,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/config/emailBuilder.js"],
   "exclude": ["dist", "node_modules"]
 }

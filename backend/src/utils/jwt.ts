@@ -31,19 +31,19 @@ export const generateAccessToken = (userId: string): string => {
 /**
  * Generate JWT refresh token for a user
  * @param userId - User ID to encode in token
- * @param _deviceInfo - Device information for tracking (reserved for future use)
- * @returns JWT refresh token string
+ * @returns Object containing JWT refresh token string and tokenId
  */
 export const generateRefreshToken = (
-  userId: string,
-  _deviceInfo: string
-): string => {
+  userId: string
+): { token: string; tokenId: string } => {
   const tokenId = `${userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
   const payload: RefreshTokenPayload = { userId, tokenId };
 
-  return jwt.sign(payload, JWT_REFRESH_SECRET, {
+  const token = jwt.sign(payload, JWT_REFRESH_SECRET, {
     expiresIn: JWT_REFRESH_EXPIRES_IN,
   } as jwt.SignOptions);
+
+  return { token, tokenId };
 };
 
 /**

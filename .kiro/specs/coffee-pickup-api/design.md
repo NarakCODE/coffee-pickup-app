@@ -1,8 +1,10 @@
 # Design Document: Coffee Pickup API
 
+> **Note**: This design document is aligned with the comprehensive API specification in `backend/API_DESIGN_SPECIFICATION.md` and database design in `backend/DATABASE_MODEL_DESIGN.md`. All models use "Store" terminology (not "Cafe") to match the database schema.
+
 ## Overview
 
-The Coffee Pickup API is a comprehensive RESTful backend service built with Node.js, Express, TypeScript, and MongoDB. It enables users to browse coffee menus from multiple cafe locations, customize orders with detailed options, manage shopping carts, place pickup orders with multiple payment methods, track orders in real-time, participate in loyalty programs, and engage with support features. The system uses JWT-based authentication with phone OTP verification and follows a clean, layered architecture pattern.
+The Coffee Pickup API is a comprehensive RESTful backend service built with Node.js, Express, TypeScript, and MongoDB. It enables users to browse coffee menus from multiple store locations, customize orders with detailed options, manage shopping carts, place pickup orders with multiple payment methods, track orders in real-time, participate in loyalty programs, and engage with support features. The system uses JWT-based authentication with email OTP verification and follows a clean, layered architecture pattern.
 
 ### Key Design Principles
 
@@ -271,7 +273,7 @@ backend/src/
 
 ### 3. Store Location System
 
-**Purpose**: Manage store/cafe locations with detailed information, operating hours, and features
+**Purpose**: Manage store locations with detailed information, operating hours, and features
 
 **Components**:
 
