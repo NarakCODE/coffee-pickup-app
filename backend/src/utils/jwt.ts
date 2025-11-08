@@ -1,72 +1,92 @@
 import jwt from 'jsonwebtoken';
-import { AppError } from './AppError.js';
+import { UnauthorizedError } from './AppError.js';
 
-interface JwtPayload {
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-key';
+const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+interface TokenPayload {
   userId: string;
-  iat?: number;
-  exp?: number;
+}
+
+interface RefreshTokenPayload extends TokenPayload {
+  tokenId: string;
 }
 
 /**
- * Generate a JWT token for a user
- * @param userId - The user ID to encode in the token
- * @returns JWT token string
+ * Generate JWT access token for a user
+ * @param userId - User ID to encode in token
+ * @returns JWT access token string
  */
-export const generateToken = (userId: string): string => {
-  const secret = process.env.JWT_SECRET;
-  const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
+export const generateAccessToken = (userId: string): string => {
+  const payload: TokenPayload = { userId };
 
-  if (!secret) {
-    throw new AppError('JWT_SECRET is not configured', 500);
-  }
-
-  // Use any to bypass TypeScript strict typing for jwt options
-  const options: any = { expiresIn };
-  return jwt.sign({ userId }, secret, options);
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+  } as jwt.SignOptions);
 };
 
 /**
- * Verify and decode a JWT token
- * @param token - The JWT token to verify
- * @returns Decoded payload containing userId
- * @throws AppError if token is invalid or expired
+ * Generate JWT refresh token for a user
+ * @param userId - User ID to encode in token
+ * @param _deviceInfo - Device information for tracking (reserved for future use)
+ * @returns JWT refresh token string
  */
-export const verifyToken = (token: string): JwtPayload => {
-  const secret = process.env.JWT_SECRET;
+export const generateRefreshToken = (
+  userId: string,
+  _deviceInfo: string
+): string => {
+  const tokenId = `${userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+  const payload: RefreshTokenPayload = { userId, tokenId };
 
-  if (!secret) {
-    throw new AppError('JWT_SECRET is not configured', 500);
-  }
+  return jwt.sign(payload, JWT_REFRESH_SECRET, {
+    expiresIn: JWT_REFRESH_EXPIRES_IN,
+  } as jwt.SignOptions);
+};
 
+/**
+ * Verify and decode JWT access token
+ * @param token - JWT token to verify
+ * @returns Decoded token payload with userId
+ * @throws UnauthorizedError if token is invalid or expired
+ */
+export const verifyAccessToken = (token: string): TokenPayload => {
   try {
-    const decoded = jwt.verify(token, secret) as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new AppError('Token has expired', 401);
+      throw new UnauthorizedError('Token has expired');
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new AppError('Invalid token', 401);
+      throw new UnauthorizedError('Invalid token');
     }
-    throw new AppError('Token verification failed', 401);
+    throw new UnauthorizedError('Token verification failed');
   }
 };
 
 /**
- * Extract token from Authorization header
- * @param authHeader - The Authorization header value
- * @returns Token string or null if not found
+ * Verify and decode JWT refresh token
+ * @param token - JWT refresh token to verify
+ * @returns Decoded token payload with userId and tokenId
+ * @throws UnauthorizedError if token is invalid or expired
  */
-export const extractTokenFromHeader = (authHeader: string | undefined): string | null => {
-  if (!authHeader) {
-    return null;
+export const verifyRefreshToken = (token: string): RefreshTokenPayload => {
+  try {
+    const decoded = jwt.verify(
+      token,
+      JWT_REFRESH_SECRET
+    ) as RefreshTokenPayload;
+    return decoded;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new UnauthorizedError('Refresh token has expired');
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new UnauthorizedError('Invalid refresh token');
+    }
+    throw new UnauthorizedError('Refresh token verification failed');
   }
-
-  // Expected format: "Bearer <token>"
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return null;
-  }
-
-  return parts[1] || null;
 };

@@ -1,63 +1,44 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyToken, extractTokenFromHeader } from '../utils/jwt.js';
-import { AppError } from '../utils/AppError.js';
+import { verifyAccessToken } from '../utils/jwt.js';
+import { UnauthorizedError } from '../utils/AppError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-// Extend Express Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-      };
-    }
+/**
+ * Extend Express Request to include authenticated user ID
+ */
+declare module 'express-serve-static-core' {
+  interface Request {
+    userId?: string;
   }
 }
 
 /**
  * Authentication middleware to protect routes
- * Verifies JWT token and adds user info to request object
+ * Verifies JWT token from Authorization header and attaches userId to request
+ * @throws UnauthorizedError if token is missing or invalid
  */
 export const authenticate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request, res: Response, next: NextFunction) => {
     // Extract token from Authorization header
-    const token = extractTokenFromHeader(req.headers.authorization);
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedError(
+        'Access denied. No token provided or invalid format.'
+      );
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     if (!token) {
-      throw new AppError('Access token is required', 401);
+      throw new UnauthorizedError('Access denied. No token provided.');
     }
 
-    // Verify token and extract user info
-    const decoded = verifyToken(token);
+    // Verify token and extract userId
+    const decoded = verifyAccessToken(token);
 
-    // Add user info to request object
-    req.user = {
-      userId: decoded.userId,
-    };
-
-    next();
-  }
-);
-
-/**
- * Optional authentication middleware
- * Adds user info to request if token is present and valid, but doesn't throw error if missing
- */
-export const optionalAuthenticate = asyncHandler(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const token = extractTokenFromHeader(req.headers.authorization);
-
-    if (token) {
-      try {
-        const decoded = verifyToken(token);
-        req.user = {
-          userId: decoded.userId,
-        };
-      } catch (error) {
-        // Ignore token errors for optional authentication
-        // User will remain undefined in req.user
-      }
-    }
+    // Attach userId to request object for use in controllers
+    req.userId = decoded.userId;
 
     next();
   }
