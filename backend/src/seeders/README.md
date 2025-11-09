@@ -27,6 +27,27 @@ npm run seed:categories
 
 **Note:** This seeder will clear all existing categories before inserting new ones.
 
+### Product Seeder
+
+Seeds the database with products, customizations, add-ons, and their relationships.
+
+**Usage:**
+
+```bash
+npm run seed:products
+```
+
+**Prerequisites:** Categories must be seeded first (`npm run seed:categories`)
+
+**What it seeds:**
+
+- **Add-ons**: Syrups (Vanilla, Caramel, Hazelnut, Mocha), Toppings (Whipped Cream, Chocolate/Caramel Drizzle), Extra Espresso Shot
+- **Products**: 12 coffee products across Hot Coffee, Iced Coffee, Espresso, and Specialty Drinks categories
+- **Customizations**: Size, Sugar Level, Ice Level (iced drinks), Coffee Level (espresso drinks)
+- **Product-AddOn Links**: Appropriate add-ons linked to each product
+
+**Note:** This seeder will clear all existing products, customizations, add-ons, and their relationships before inserting new ones.
+
 ## Creating New Seeders
 
 1. Create a new file in `src/seeders/` (e.g., `productSeeder.ts`)

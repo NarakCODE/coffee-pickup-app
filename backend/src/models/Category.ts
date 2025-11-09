@@ -69,7 +69,7 @@ categorySchema.pre('save', function (next) {
     });
   }
   next();
-});
+}); 
 
 // Indexes (slug index is created by unique: true)
 categorySchema.index({ parentId: 1 });

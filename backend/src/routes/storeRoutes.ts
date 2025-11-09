@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as storeController from '../controllers/storeController.js';
+import * as productController from '../controllers/productController.js';
 
 const router = Router();
 
@@ -32,5 +33,18 @@ router.get('/:id', storeController.getStoreById);
  * - date: Target date in ISO format (optional, defaults to today)
  */
 router.get('/:id/pickup-times', storeController.getPickupTimes);
+
+/**
+ * GET /api/stores/:storeId/menu
+ * Get menu (products) for a specific store
+ * Query params:
+ * - categoryId: Filter by category (optional)
+ * - isFeatured: Filter featured products (optional)
+ * - isBestSelling: Filter best selling products (optional)
+ * - tags: Filter by tags (optional)
+ * - minPrice: Minimum price filter (optional)
+ * - maxPrice: Maximum price filter (optional)
+ */
+router.get('/:storeId/menu', productController.getStoreMenu);
 
 export default router;

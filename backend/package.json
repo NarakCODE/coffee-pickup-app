@@ -16,7 +16,8 @@
     "format:check": "prettier --check \"src/**/*.ts\"",
     "type-check": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed:categories": "tsx src/seeders/categorySeeder.ts"
+    "seed:categories": "tsx src/seeders/categorySeeder.ts",
+    "seed:products": "tsx src/seeders/productSeeder.ts"
   },
   "lint-staged": {
     "*.ts": [
