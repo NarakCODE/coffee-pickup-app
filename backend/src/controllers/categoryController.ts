@@ -1,13 +1,14 @@
 import type { Request, Response } from 'express';
 import * as categoryService from '../services/categoryService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { BadRequestError } from '../utils/AppError.js';
 
 /**
- * @route   GET /api/categories
+ * @route   GET /api/v1/categories
  * @desc    Get all active categories
  * @access  Public
  */
-export const getAllCategories = asyncHandler(
+export const getCategories = asyncHandler(
   async (_req: Request, res: Response) => {
     const categories = await categoryService.getAllCategories();
 
@@ -19,14 +20,19 @@ export const getAllCategories = asyncHandler(
 );
 
 /**
- * @route   GET /api/categories/:id
+ * @route   GET /api/v1/categories/:id
  * @desc    Get category by ID
  * @access  Public
  */
 export const getCategoryById = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const category = await categoryService.getCategoryById(id!);
+
+    if (!id) {
+      throw new BadRequestError('Category ID is required');
+    }
+
+    const category = await categoryService.getCategoryById(id);
 
     res.status(200).json({
       success: true,
@@ -36,14 +42,19 @@ export const getCategoryById = asyncHandler(
 );
 
 /**
- * @route   GET /api/categories/slug/:slug
+ * @route   GET /api/v1/categories/slug/:slug
  * @desc    Get category by slug
  * @access  Public
  */
 export const getCategoryBySlug = asyncHandler(
   async (req: Request, res: Response) => {
     const { slug } = req.params;
-    const category = await categoryService.getCategoryBySlug(slug!);
+
+    if (!slug) {
+      throw new BadRequestError('Category slug is required');
+    }
+
+    const category = await categoryService.getCategoryBySlug(slug);
 
     res.status(200).json({
       success: true,
@@ -53,14 +64,19 @@ export const getCategoryBySlug = asyncHandler(
 );
 
 /**
- * @route   GET /api/categories/:id/subcategories
+ * @route   GET /api/v1/categories/:id/subcategories
  * @desc    Get subcategories for a parent category
  * @access  Public
  */
 export const getSubcategories = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
-    const subcategories = await categoryService.getSubcategories(id!);
+
+    if (!id) {
+      throw new BadRequestError('Category ID is required');
+    }
+
+    const subcategories = await categoryService.getSubcategories(id);
 
     res.status(200).json({
       success: true,

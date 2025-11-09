@@ -1,4 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import slugifyLib from 'slugify';
+
+const slugify = slugifyLib.default || slugifyLib;
 
 export interface ICategory extends Document {
   name: string;
@@ -6,7 +9,7 @@ export interface ICategory extends Document {
   description?: string;
   imageUrl?: string;
   icon?: string;
-  parentCategoryId?: mongoose.Types.ObjectId;
+  parentId?: mongoose.Types.ObjectId;
   displayOrder: number;
   isActive: boolean;
   createdAt: Date;
@@ -19,20 +22,16 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       required: [true, 'Category name is required'],
       trim: true,
-      maxlength: [100, 'Category name cannot exceed 100 characters'],
     },
     slug: {
       type: String,
-      required: [true, 'Category slug is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     description: {
       type: String,
       trim: true,
-      maxlength: [500, 'Description cannot exceed 500 characters'],
     },
     imageUrl: {
       type: String,
@@ -42,7 +41,7 @@ const categorySchema = new Schema<ICategory>(
       type: String,
       trim: true,
     },
-    parentCategoryId: {
+    parentId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
       default: null,
@@ -55,24 +54,37 @@ const categorySchema = new Schema<ICategory>(
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
-  {
-    timestamps: true,
-    toJSON: {
-      transform: (_doc, ret) => {
-        const { _id, __v: __version, ...rest } = ret;
-        return { id: _id, ...rest };
-      },
-    },
-  }
+  { timestamps: true }
 );
 
-// Index for efficient querying
-categorySchema.index({ isActive: 1, displayOrder: 1 });
-categorySchema.index({ parentCategoryId: 1, isActive: 1 });
+// Pre-save hook to auto-generate slug from name
+categorySchema.pre('save', function (next) {
+  if (!this.slug || this.isModified('name')) {
+    this.slug = slugify(this.name, {
+      lower: true,
+      strict: true,
+      trim: true,
+    });
+  }
+  next();
+});
 
-const Category = mongoose.model<ICategory>('Category', categorySchema);
+// Indexes (slug index is created by unique: true)
+categorySchema.index({ parentId: 1 });
+categorySchema.index({ isActive: 1 });
+categorySchema.index({ displayOrder: 1 });
 
-export default Category;
+// Transform to JSON
+categorySchema.set('toJSON', {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transform: (_doc, ret: any) => {
+    ret.id = ret._id?.toString?.();
+    delete (ret as Record<string, unknown>)._id;
+    delete (ret as Record<string, unknown>).__v;
+    return ret;
+  },
+});
+
+export const Category = mongoose.model<ICategory>('Category', categorySchema);
