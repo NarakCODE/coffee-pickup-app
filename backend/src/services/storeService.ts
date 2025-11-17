@@ -1,4 +1,4 @@
-import { Store } from '../models/Store.js';
+import { Store, type IStore } from '../models/Store.js';
 import { NotFoundError } from '../utils/AppError.js';
 
 interface StoreFilters {
@@ -36,6 +36,33 @@ export const calculateDistance = (
   const distance = R * c;
 
   return Math.round(distance * 100) / 100; // Round to 2 decimal places
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const createStore = async (storeData: any): Promise<IStore> => {
+  const store = new Store(storeData);
+  await store.save();
+  return store;
+};
+
+/**
+ * Get all stores including inactive ones (Admin only)
+ * @returns Array of all stores
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getAllStoresAdmin = async (): Promise<any[]> => {
+  const stores = await Store.find({}).sort({ createdAt: -1 }).lean();
+
+  const result = [];
+  for (const store of stores) {
+    const storeDoc = await Store.findById(store._id);
+    result.push({
+      ...store,
+      id: store._id?.toString(),
+      isOpenNow: storeDoc ? storeDoc.isOpenNow() : false,
+    });
+  }
+  return result;
 };
 
 /**
@@ -227,5 +254,76 @@ export const getStoreLocation = async (storeId: string) => {
     country: store.country,
     latitude: store.latitude,
     longitude: store.longitude,
+  };
+};
+
+/**
+ * Update store details (Admin only)
+ * @param storeId - Store ID
+ * @param updateData - Store data to update
+ * @returns Updated store
+ * @throws NotFoundError if store not found
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const updateStore = async (storeId: string, updateData: any) => {
+  const store = await Store.findById(storeId);
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  // Update store fields
+  Object.assign(store, updateData);
+  await store.save();
+
+  const storeData = store.toObject();
+  return {
+    ...storeData,
+    id: storeData._id?.toString(),
+    isOpenNow: store.isOpenNow(),
+  };
+};
+
+/**
+ * Delete store and cascade delete related data (Admin only)
+ * @param storeId - Store ID
+ * @throws NotFoundError if store not found
+ */
+export const deleteStore = async (storeId: string): Promise<void> => {
+  const store = await Store.findById(storeId);
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  // TODO: Cascade delete related categories and products
+  // This should be implemented when Category and Product models are available
+  // await Category.deleteMany({ storeId });
+  // await Product.deleteMany({ storeId });
+
+  await Store.findByIdAndDelete(storeId);
+};
+
+/**
+ * Toggle store active status (Admin only)
+ * @param storeId - Store ID
+ * @returns Updated store
+ * @throws NotFoundError if store not found
+ */
+export const toggleStoreStatus = async (storeId: string) => {
+  const store = await Store.findById(storeId);
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  store.isActive = !store.isActive;
+  await store.save();
+
+  const storeData = store.toObject();
+  return {
+    ...storeData,
+    id: storeData._id?.toString(),
+    isOpenNow: store.isOpenNow(),
   };
 };

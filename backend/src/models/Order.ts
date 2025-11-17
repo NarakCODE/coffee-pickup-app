@@ -57,19 +57,16 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       required: [true, 'Order number is required'],
       unique: true,
-      index: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'User ID is required'],
-      index: true,
     },
     storeId: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
       required: [true, 'Store ID is required'],
-      index: true,
     },
     status: {
       type: String,
@@ -83,13 +80,11 @@ const orderSchema = new Schema<IOrder>(
         'cancelled',
       ],
       default: 'pending_payment',
-      index: true,
     },
     paymentStatus: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
       default: 'pending',
-      index: true,
     },
     paymentMethod: {
       type: String,
@@ -200,12 +195,10 @@ orderSchema.pre('save', async function (next) {
 });
 
 // Indexes for efficient queries
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ storeId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
-orderSchema.index({ createdAt: -1 });
 
 // Transform to JSON
 orderSchema.set('toJSON', {

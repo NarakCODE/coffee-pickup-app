@@ -52,6 +52,25 @@
           }
         },
         {
+          "name": "Get All Stores - Admin (Including Inactive)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/admin/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", "admin", "all"]
+            },
+            "description": "Get all stores including inactive ones (Admin only). Use this to see newly created stores that haven't been activated yet."
+          }
+        },
+        {
           "name": "Get Store by ID",
           "request": {
             "method": "GET",
@@ -232,6 +251,121 @@
               ]
             },
             "description": "Get menu (products) for a specific store with optional filters"
+          }
+        },
+        {
+          "name": "Create Store (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corner Coffee Downtown\",\n  \"slug\": \"corner-coffee-downtown\",\n  \"description\": \"Premium coffee shop in downtown area\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Phnom Penh\",\n  \"state\": \"Phnom Penh\",\n  \"postalCode\": \"12000\",\n  \"country\": \"Cambodia\",\n  \"latitude\": 11.5564,\n  \"longitude\": 104.9282,\n  \"phoneNumber\": \"+855 12 345 678\",\n  \"email\": \"downtown@cornercoffee.com\",\n  \"openingHours\": {\n    \"monday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"tuesday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"wednesday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"thursday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"friday\": { \"open\": \"07:00\", \"close\": \"21:00\" },\n    \"saturday\": { \"open\": \"08:00\", \"close\": \"21:00\" },\n    \"sunday\": { \"open\": \"08:00\", \"close\": \"20:00\" }\n  },\n  \"images\": [\"https://example.com/store1.jpg\"],\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/stores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores"]
+            },
+            "description": "Create a new store (Admin only). Store is created with inactive status by default."
+          }
+        },
+        {
+          "name": "Update Store (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corner Coffee Downtown - Updated\",\n  \"description\": \"Updated description\",\n  \"phoneNumber\": \"+855 12 999 888\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Update store details (Admin only)"
+          }
+        },
+        {
+          "name": "Toggle Store Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":id", "status"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Toggle store active/inactive status (Admin only)"
+          }
+        },
+        {
+          "name": "Delete Store (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Delete store and cascade delete related categories and products (Admin only)"
           }
         }
       ]

@@ -1,8 +1,29 @@
 import { Router } from 'express';
 import * as storeController from '../controllers/storeController.js';
 import * as productController from '../controllers/productController.js';
+import { authenticate } from '../middlewares/auth.js';
+import { authorize } from '../middlewares/authorize.js';
 
 const router = Router();
+
+// Admin-only routes - Create store
+router.post(
+  '/',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  storeController.createStore
+);
+
+/**
+ * GET /api/stores/admin/all
+ * Get all stores including inactive ones (Admin only)
+ */
+router.get(
+  '/admin/all',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  storeController.getAllStoresAdmin
+);
 
 /**
  * GET /api/stores
@@ -64,5 +85,39 @@ router.get('/:storeId/location', storeController.getStoreLocation);
  * - maxPrice: Maximum price filter (optional)
  */
 router.get('/:storeId/menu', productController.getStoreMenu);
+
+// Admin-only routes - Update, Delete, Toggle Status
+/**
+ * PUT /api/stores/:id
+ * Update store details (Admin only)
+ */
+router.put(
+  '/:id',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  storeController.updateStore
+);
+
+/**
+ * DELETE /api/stores/:id
+ * Delete store (Admin only)
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  storeController.deleteStore
+);
+
+/**
+ * PATCH /api/stores/:id/status
+ * Toggle store active status (Admin only)
+ */
+router.patch(
+  '/:id/status',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  storeController.toggleStoreStatus
+);
 
 export default router;

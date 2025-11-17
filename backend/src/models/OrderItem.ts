@@ -95,9 +95,6 @@ const orderItemSchema = new Schema<IOrderItem>(
   }
 );
 
-// Index for efficient order item queries
-orderItemSchema.index({ orderId: 1 });
-
 // Transform to JSON
 orderItemSchema.set('toJSON', {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

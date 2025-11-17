@@ -3,6 +3,37 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import * as storeService from '../services/storeService.js';
 import { BadRequestError } from '../utils/AppError.js';
 
+export const createStore = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const storeData = req.body;
+
+    const store = await storeService.createStore(storeData);
+
+    res.status(201).json({
+      success: true,
+      data: store,
+    });
+  }
+);
+
+/**
+ * Get all stores including inactive ones (Admin only)
+ * GET /api/stores/admin/all
+ */
+export const getAllStoresAdmin = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const stores = await storeService.getAllStoresAdmin();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        stores,
+        count: stores.length,
+      },
+    });
+  }
+);
+
 /**
  * Get all stores with optional location-based filtering
  * GET /api/stores
@@ -203,6 +234,72 @@ export const getStoreLocation = asyncHandler(
     res.status(200).json({
       success: true,
       data: location,
+    });
+  }
+);
+
+/**
+ * Update store details (Admin only)
+ * PUT /api/stores/:id
+ */
+export const updateStore = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (!id) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const store = await storeService.updateStore(id, updateData);
+
+    res.status(200).json({
+      success: true,
+      data: store,
+      message: 'Store updated successfully',
+    });
+  }
+);
+
+/**
+ * Delete store (Admin only)
+ * DELETE /api/stores/:id
+ */
+export const deleteStore = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    await storeService.deleteStore(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Store deleted successfully',
+    });
+  }
+);
+
+/**
+ * Toggle store status (Admin only)
+ * PATCH /api/stores/:id/status
+ */
+export const toggleStoreStatus = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const store = await storeService.toggleStoreStatus(id);
+
+    res.status(200).json({
+      success: true,
+      data: store,
+      message: `Store ${store.isActive ? 'activated' : 'deactivated'} successfully`,
     });
   }
 );
