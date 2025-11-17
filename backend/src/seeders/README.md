@@ -4,6 +4,38 @@ This directory contains database seeder scripts for populating the database with
 
 ## Available Seeders
 
+### Admin User Seeder
+
+Seeds the database with an initial admin user account for system administration.
+
+**Usage:**
+
+```bash
+npm run seed:admin
+```
+
+**Configuration:**
+
+Set the following environment variables in your `.env` file:
+
+```
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=Admin@123456
+```
+
+**What it creates:**
+
+- Admin user with full system access
+- Role: `admin`
+- Email verified by default
+- Active status
+
+**Note:**
+
+- If an admin user with the specified email already exists, the seeder will skip creation
+- If a user exists with the email but has a different role, it will be updated to admin
+- **IMPORTANT:** Change the default password after first login for security
+
 ### Category Seeder
 
 Seeds the database with initial product categories.

@@ -410,3 +410,127 @@ export const getProductsByCategory = async (
 
   return getProducts({ categoryId });
 };
+
+/**
+ * Update product status (availability)
+ * @param productId - Product ID
+ * @param isAvailable - New availability status
+ * @returns Updated product
+ * @throws NotFoundError if product not found
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const updateProductStatus = async (
+  productId: string,
+  isAvailable: boolean
+): Promise<any> => {
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    throw new BadRequestError('Invalid product ID');
+  }
+
+  const product = await Product.findOne({
+    _id: productId,
+    deletedAt: null,
+  });
+
+  if (!product) {
+    throw new NotFoundError('Product not found');
+  }
+
+  product.isAvailable = isAvailable;
+  await product.save();
+
+  const updatedProduct = await Product.findById(productId)
+    .populate('categoryId', 'name slug imageUrl icon')
+    .lean();
+
+  return {
+    ...updatedProduct,
+    id: updatedProduct?._id?.toString(),
+    category: updatedProduct?.categoryId,
+  };
+};
+
+/**
+ * Duplicate a product
+ * Creates a copy of the product with "Copy" appended to the name
+ * @param productId - Product ID to duplicate
+ * @returns Newly created product copy
+ * @throws NotFoundError if product not found
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const duplicateProduct = async (productId: string): Promise<any> => {
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    throw new BadRequestError('Invalid product ID');
+  }
+
+  const originalProduct = await Product.findOne({
+    _id: productId,
+    deletedAt: null,
+  }).lean();
+
+  if (!originalProduct) {
+    throw new NotFoundError('Product not found');
+  }
+
+  // Create new product with copied attributes
+  const duplicatedProduct = new Product({
+    name: `${originalProduct.name} Copy`,
+    description: originalProduct.description,
+    categoryId: originalProduct.categoryId,
+    images: [...originalProduct.images],
+    basePrice: originalProduct.basePrice,
+    currency: originalProduct.currency,
+    preparationTime: originalProduct.preparationTime,
+    calories: originalProduct.calories,
+    isAvailable: false, // Set to inactive by default
+    isFeatured: false,
+    isBestSelling: false,
+    allergens: [...originalProduct.allergens],
+    tags: [...originalProduct.tags],
+    nutritionalInfo: originalProduct.nutritionalInfo
+      ? { ...originalProduct.nutritionalInfo }
+      : undefined,
+    displayOrder: originalProduct.displayOrder,
+  });
+
+  await duplicatedProduct.save();
+
+  // Copy customizations
+  const customizations = await ProductCustomization.find({
+    productId: originalProduct._id,
+  }).lean();
+
+  for (const customization of customizations) {
+    await ProductCustomization.create({
+      productId: duplicatedProduct._id,
+      customizationType: customization.customizationType,
+      isRequired: customization.isRequired,
+      options: customization.options,
+      displayOrder: customization.displayOrder,
+    });
+  }
+
+  // Copy add-ons associations
+  const productAddOns = await ProductAddOn.find({
+    productId: originalProduct._id,
+  }).lean();
+
+  for (const productAddOn of productAddOns) {
+    await ProductAddOn.create({
+      productId: duplicatedProduct._id,
+      addOnId: productAddOn.addOnId,
+      isDefault: productAddOn.isDefault,
+    });
+  }
+
+  // Return the duplicated product with populated data
+  const result = await Product.findById(duplicatedProduct._id)
+    .populate('categoryId', 'name slug imageUrl icon')
+    .lean();
+
+  return {
+    ...result,
+    id: result?._id?.toString(),
+    category: result?.categoryId,
+  };
+};

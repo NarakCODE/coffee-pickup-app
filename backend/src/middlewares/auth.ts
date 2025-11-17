@@ -4,11 +4,13 @@ import { UnauthorizedError } from '../utils/AppError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 /**
- * Extend Express Request to include authenticated user ID
+ * Extend Express Request to include authenticated user information
  */
 declare module 'express-serve-static-core' {
   interface Request {
     userId?: string;
+    userEmail?: string;
+    userRole?: 'user' | 'admin' | 'moderator';
   }
 }
 
@@ -34,11 +36,13 @@ export const authenticate = asyncHandler(
       throw new UnauthorizedError('Access denied. No token provided.');
     }
 
-    // Verify token and extract userId
+    // Verify token and extract user information
     const decoded = verifyAccessToken(token);
 
-    // Attach userId to request object for use in controllers
+    // Attach user information to request object for use in controllers
     req.userId = decoded.userId;
+    req.userEmail = decoded.email;
+    req.userRole = decoded.role;
 
     next();
   }

@@ -194,6 +194,9 @@ productSchema.index({ isBestSelling: 1 });
 productSchema.index({ createdAt: 1 });
 productSchema.index({ deletedAt: 1 });
 
+// Text index for search functionality
+productSchema.index({ name: 'text', description: 'text' });
+
 productSchema.set('toJSON', {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform: (_doc, ret: any) => {

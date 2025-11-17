@@ -11,6 +11,7 @@ export interface IUser extends Document {
   gender?: 'male' | 'female' | 'other';
   emailVerified: boolean;
   phoneVerified: boolean;
+  role: 'user' | 'admin' | 'moderator';
   loyaltyPoints: number;
   loyaltyTier: 'bronze' | 'silver' | 'gold' | 'platinum';
   referralCode: string;
@@ -75,6 +76,11 @@ const userSchema = new Schema<IUser>(
     phoneVerified: {
       type: Boolean,
       default: false,
+    },
+    role: {
+      type: String,
+      enum: ['user', 'admin', 'moderator'],
+      default: 'user',
     },
     loyaltyPoints: {
       type: Number,

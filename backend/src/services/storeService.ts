@@ -161,3 +161,71 @@ export const getAvailablePickupTimes = async (storeId: string, date?: Date) => {
     pickupTimes,
   };
 };
+
+/**
+ * Get store gallery images
+ * @param storeId - Store ID
+ * @returns Gallery images array
+ * @throws NotFoundError if store not found or inactive
+ */
+export const getStoreGallery = async (storeId: string) => {
+  const store = await Store.findOne({ _id: storeId, isActive: true });
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  return {
+    storeId: String(store._id),
+    storeName: store.name,
+    images: store.images || [],
+  };
+};
+
+/**
+ * Get store opening hours
+ * @param storeId - Store ID
+ * @returns Opening hours and special hours
+ * @throws NotFoundError if store not found or inactive
+ */
+export const getStoreHours = async (storeId: string) => {
+  const store = await Store.findOne({ _id: storeId, isActive: true });
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  return {
+    storeId: String(store._id),
+    storeName: store.name,
+    openingHours: store.openingHours,
+    specialHours: store.specialHours || [],
+    isOpenNow: store.isOpenNow(),
+  };
+};
+
+/**
+ * Get store location details
+ * @param storeId - Store ID
+ * @returns Location information including address and coordinates
+ * @throws NotFoundError if store not found or inactive
+ */
+export const getStoreLocation = async (storeId: string) => {
+  const store = await Store.findOne({ _id: storeId, isActive: true });
+
+  if (!store) {
+    throw new NotFoundError('Store not found');
+  }
+
+  return {
+    storeId: String(store._id),
+    storeName: store.name,
+    address: store.address,
+    city: store.city,
+    state: store.state,
+    postalCode: store.postalCode,
+    country: store.country,
+    latitude: store.latitude,
+    longitude: store.longitude,
+  };
+};

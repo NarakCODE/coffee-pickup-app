@@ -345,3 +345,57 @@ export const getProductsByCategory = asyncHandler(
     });
   }
 );
+
+/**
+ * Update product status (availability)
+ * PATCH /api/products/:productId/status
+ * Admin only
+ */
+export const updateProductStatus = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { productId } = req.params;
+    const { isAvailable } = req.body;
+
+    if (!productId) {
+      throw new BadRequestError('Product ID is required');
+    }
+
+    if (typeof isAvailable !== 'boolean') {
+      throw new BadRequestError('isAvailable must be a boolean value');
+    }
+
+    const product = await productService.updateProductStatus(
+      productId,
+      isAvailable
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Product ${isAvailable ? 'activated' : 'deactivated'} successfully`,
+      data: product,
+    });
+  }
+);
+
+/**
+ * Duplicate a product
+ * POST /api/products/:productId/duplicate
+ * Admin only
+ */
+export const duplicateProduct = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { productId } = req.params;
+
+    if (!productId) {
+      throw new BadRequestError('Product ID is required');
+    }
+
+    const duplicatedProduct = await productService.duplicateProduct(productId);
+
+    res.status(201).json({
+      success: true,
+      message: 'Product duplicated successfully',
+      data: duplicatedProduct,
+    });
+  }
+);

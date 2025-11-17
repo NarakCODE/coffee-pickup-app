@@ -114,7 +114,7 @@ export const completeRegistration = async (
 
   // Generate tokens
   const userId = String(user._id);
-  const accessToken = generateAccessToken(userId);
+  const accessToken = generateAccessToken(userId, user.email, user.role);
   const { token: refreshToken, tokenId } = generateRefreshToken(userId);
 
   // Store refresh token in database
@@ -163,7 +163,7 @@ export const registerUser = async (
 
   // Generate tokens
   const userId = String(user._id);
-  const accessToken = generateAccessToken(userId);
+  const accessToken = generateAccessToken(userId, user.email, user.role);
   const { token: refreshToken, tokenId } = generateRefreshToken(userId);
 
   // Store refresh token in database
@@ -215,7 +215,7 @@ export const loginUser = async (
 
   // Generate tokens
   const userId = String(user._id);
-  const accessToken = generateAccessToken(userId);
+  const accessToken = generateAccessToken(userId, user.email, user.role);
   const { token: refreshToken, tokenId } = generateRefreshToken(userId);
 
   // Store refresh token in database
@@ -387,7 +387,7 @@ export const refreshAccessToken = async (
 
   // Generate new tokens
   const userId = String(user._id);
-  const accessToken = generateAccessToken(userId);
+  const accessToken = generateAccessToken(userId, user.email, user.role);
   const { token: newRefreshToken, tokenId: newTokenId } =
     generateRefreshToken(userId);
 

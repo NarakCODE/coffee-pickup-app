@@ -84,3 +84,36 @@ export const getSubcategories = asyncHandler(
     });
   }
 );
+
+/**
+ * @route   PATCH /api/v1/categories/reorder
+ * @desc    Reorder categories by updating displayOrder
+ * @access  Admin only
+ */
+export const reorderCategories = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { categories } = req.body;
+
+    if (!categories || !Array.isArray(categories) || categories.length === 0) {
+      throw new BadRequestError(
+        'Categories array is required and must not be empty'
+      );
+    }
+
+    // Validate each category object has required fields
+    for (const category of categories) {
+      if (!category.categoryId || typeof category.displayOrder !== 'number') {
+        throw new BadRequestError(
+          'Each category must have categoryId and displayOrder'
+        );
+      }
+    }
+
+    await categoryService.reorderCategories(categories);
+
+    res.status(200).json({
+      success: true,
+      message: 'Categories reordered successfully',
+    });
+  }
+);

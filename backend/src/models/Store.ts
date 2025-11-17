@@ -33,6 +33,7 @@ export interface IStore extends Document {
   latitude: number;
   longitude: number;
   imageUrl?: string;
+  images: string[]; // Gallery images
   openingHours: Record<
     | 'monday'
     | 'tuesday'
@@ -101,6 +102,10 @@ const storeSchema = new Schema<IStore>(
       max: [180, 'Longitude must be between -180 and 180'],
     },
     imageUrl: { type: String, trim: true },
+    images: {
+      type: [String],
+      default: [],
+    },
     openingHours: {
       type: {
         monday: { open: String, close: String },
@@ -260,6 +265,9 @@ storeSchema.methods.getPickupTimes = function (date?: Date): string[] {
 
   return slots;
 };
+
+// Text index for search functionality
+storeSchema.index({ name: 'text', description: 'text' });
 
 storeSchema.set('toJSON', {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -64,3 +64,29 @@ export const getSubcategories = async (
 
   return subcategories;
 };
+
+/**
+ * Reorder categories by updating displayOrder for multiple categories
+ * @param categoryOrders - Array of objects containing categoryId and new displayOrder
+ */
+export const reorderCategories = async (
+  categoryOrders: Array<{ categoryId: string; displayOrder: number }>
+): Promise<void> => {
+  // Validate that all categories exist
+  const categoryIds = categoryOrders.map((item) => item.categoryId);
+  const categories = await Category.find({ _id: { $in: categoryIds } });
+
+  if (categories.length !== categoryIds.length) {
+    throw new NotFoundError('One or more categories not found');
+  }
+
+  // Perform bulk update
+  const bulkOps = categoryOrders.map((item) => ({
+    updateOne: {
+      filter: { _id: item.categoryId },
+      update: { $set: { displayOrder: item.displayOrder } },
+    },
+  }));
+
+  await Category.bulkWrite(bulkOps);
+};

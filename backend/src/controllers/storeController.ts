@@ -143,3 +143,66 @@ export const getPickupTimes = asyncHandler(
     });
   }
 );
+
+/**
+ * Get store gallery images
+ * GET /api/stores/:storeId/gallery
+ */
+export const getStoreGallery = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { storeId } = req.params;
+
+    if (!storeId) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const gallery = await storeService.getStoreGallery(storeId);
+
+    res.status(200).json({
+      success: true,
+      data: gallery,
+    });
+  }
+);
+
+/**
+ * Get store opening hours
+ * GET /api/stores/:storeId/hours
+ */
+export const getStoreHours = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { storeId } = req.params;
+
+    if (!storeId) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const hours = await storeService.getStoreHours(storeId);
+
+    res.status(200).json({
+      success: true,
+      data: hours,
+    });
+  }
+);
+
+/**
+ * Get store location details
+ * GET /api/stores/:storeId/location
+ */
+export const getStoreLocation = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const { storeId } = req.params;
+
+    if (!storeId) {
+      throw new BadRequestError('Store ID is required');
+    }
+
+    const location = await storeService.getStoreLocation(storeId);
+
+    res.status(200).json({
+      success: true,
+      data: location,
+    });
+  }
+);

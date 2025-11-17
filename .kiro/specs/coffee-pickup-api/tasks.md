@@ -68,14 +68,14 @@
   - Create `src/routes/storeRoutes.ts` with GET /stores, GET /stores/:id routes
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-- [ ] 9. Create Category model and endpoints
+- [x] 9. Create Category model and endpoints
 
   - Create `src/models/Category.ts` with hierarchical structure support
   - Create `src/services/categoryService.ts` for category operations
   - Create `src/controllers/categoryController.ts` and routes
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [ ] 10. Create Product model with customization support
+- [x] 10. Create Product model with customization support
 
   - Create `src/models/Product.ts` with schema for menu items
   - Create `src/models/ProductCustomization.ts` for customization options
@@ -83,13 +83,13 @@
   - Add method to calculate item price with customizations
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [ ] 11. Create Add-on models
+- [x] 11. Create Add-on models
 
   - Create `src/models/AddOn.ts` for add-on items
   - Create `src/models/ProductAddOn.ts` for product-addon relationships
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 12. Implement product service and controller
+- [x] 12. Implement product service and controller
 
   - Create `src/services/productService.ts` with product operations
   - Add product search and filtering functionality

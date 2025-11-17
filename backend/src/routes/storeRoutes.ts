@@ -35,6 +35,24 @@ router.get('/:id', storeController.getStoreById);
 router.get('/:id/pickup-times', storeController.getPickupTimes);
 
 /**
+ * GET /api/stores/:storeId/gallery
+ * Get store gallery images
+ */
+router.get('/:storeId/gallery', storeController.getStoreGallery);
+
+/**
+ * GET /api/stores/:storeId/hours
+ * Get store opening hours and special hours
+ */
+router.get('/:storeId/hours', storeController.getStoreHours);
+
+/**
+ * GET /api/stores/:storeId/location
+ * Get store location details
+ */
+router.get('/:storeId/location', storeController.getStoreLocation);
+
+/**
  * GET /api/stores/:storeId/menu
  * Get menu (products) for a specific store
  * Query params:

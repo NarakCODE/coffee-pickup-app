@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import * as productController from '../controllers/productController.js';
+import { authenticate } from '../middlewares/auth.js';
+import { authorize } from '../middlewares/authorize.js';
 
 const router = Router();
 
@@ -25,5 +27,21 @@ router.get('/:id/customizations', productController.getProductCustomizations);
 
 // Get product add-ons
 router.get('/:id/addons', productController.getProductAddOns);
+
+// Admin only: Update product status
+router.patch(
+  '/:productId/status',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  productController.updateProductStatus
+);
+
+// Admin only: Duplicate product
+router.post(
+  '/:productId/duplicate',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  productController.duplicateProduct
+);
 
 export default router;

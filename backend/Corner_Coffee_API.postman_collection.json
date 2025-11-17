@@ -1,0 +1,477 @@
+{
+  "info": {
+    "name": "Corner Coffee API",
+    "description": "API collection for Corner Coffee Pickup App",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stores",
+      "item": [
+        {
+          "name": "Get All Stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores"]
+            },
+            "description": "Get all active stores. Optionally filter by location using latitude, longitude, and radius query parameters."
+          }
+        },
+        {
+          "name": "Get All Stores (With Location Filter)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores?latitude=11.5564&longitude=104.9282&radius=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores"],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "11.5564",
+                  "description": "User's latitude"
+                },
+                {
+                  "key": "longitude",
+                  "value": "104.9282",
+                  "description": "User's longitude"
+                },
+                {
+                  "key": "radius",
+                  "value": "10",
+                  "description": "Search radius in kilometers"
+                }
+              ]
+            },
+            "description": "Get stores within a specific radius from user's location"
+          }
+        },
+        {
+          "name": "Get Store by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get store details by ID"
+          }
+        },
+        {
+          "name": "Get Store by Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/slug/:slug",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", "slug", ":slug"],
+              "variable": [
+                {
+                  "key": "slug",
+                  "value": "",
+                  "description": "Store slug"
+                }
+              ]
+            },
+            "description": "Get store details by slug"
+          }
+        },
+        {
+          "name": "Get Store Pickup Times",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:id/pickup-times?date=2025-11-16",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":id", "pickup-times"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-11-16",
+                  "description": "Target date in ISO format (optional)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get available pickup time slots for a store on a specific date"
+          }
+        },
+        {
+          "name": "Get Store Gallery",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:storeId/gallery",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":storeId", "gallery"],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get gallery images for a store"
+          }
+        },
+        {
+          "name": "Get Store Hours",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:storeId/hours",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":storeId", "hours"],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get opening hours, special hours, and current open status for a store"
+          }
+        },
+        {
+          "name": "Get Store Location",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:storeId/location",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":storeId", "location"],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get location details including address and coordinates for a store"
+          }
+        },
+        {
+          "name": "Get Store Menu",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/:storeId/menu?categoryId=&isFeatured=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", ":storeId", "menu"],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "",
+                  "description": "Filter by category (optional)"
+                },
+                {
+                  "key": "isFeatured",
+                  "value": "true",
+                  "description": "Filter featured products (optional)"
+                },
+                {
+                  "key": "isBestSelling",
+                  "value": "",
+                  "description": "Filter best selling products (optional)",
+                  "disabled": true
+                },
+                {
+                  "key": "tags",
+                  "value": "",
+                  "description": "Filter by tags (optional)",
+                  "disabled": true
+                },
+                {
+                  "key": "minPrice",
+                  "value": "",
+                  "description": "Minimum price filter (optional)",
+                  "disabled": true
+                },
+                {
+                  "key": "maxPrice",
+                  "value": "",
+                  "description": "Maximum price filter (optional)",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "storeId",
+                  "value": "",
+                  "description": "Store ID"
+                }
+              ]
+            },
+            "description": "Get menu (products) for a specific store with optional filters"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "item": [
+        {
+          "name": "Validate Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "validate"]
+            },
+            "description": "Validate cart before proceeding to checkout. Checks cart items, product availability, prices, and delivery address."
+          }
+        },
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout"]
+            },
+            "description": "Create a checkout session with 15-minute expiration. Returns session ID and checkout details."
+          }
+        },
+        {
+          "name": "Get Checkout Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/:checkoutId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", ":checkoutId"],
+              "variable": [
+                {
+                  "key": "checkoutId",
+                  "value": "{{checkoutSessionId}}",
+                  "description": "Checkout session ID"
+                }
+              ]
+            },
+            "description": "Get checkout session details including items, totals, and expiration time."
+          }
+        },
+        {
+          "name": "Get Payment Methods",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/payment-methods",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "payment-methods"]
+            },
+            "description": "Get list of available payment methods (ABA, ACLEDA, Wing, Cash on Delivery)."
+          }
+        },
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"couponCode\": \"WELCOME10\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/:checkoutId/apply-coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", ":checkoutId", "apply-coupon"],
+              "variable": [
+                {
+                  "key": "checkoutId",
+                  "value": "{{checkoutSessionId}}",
+                  "description": "Checkout session ID"
+                }
+              ]
+            },
+            "description": "Apply a promo code to the checkout. Validates code, usage limits, validity dates, and minimum order amount."
+          }
+        },
+        {
+          "name": "Remove Coupon",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/:checkoutId/remove-coupon",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", ":checkoutId", "remove-coupon"],
+              "variable": [
+                {
+                  "key": "checkoutId",
+                  "value": "{{checkoutSessionId}}",
+                  "description": "Checkout session ID"
+                }
+              ]
+            },
+            "description": "Remove applied coupon from checkout and recalculate totals."
+          }
+        },
+        {
+          "name": "Get Delivery Charges",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/delivery-charges?addressId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", "delivery-charges"],
+              "query": [
+                {
+                  "key": "addressId",
+                  "value": "",
+                  "description": "Address ID to calculate delivery fee"
+                }
+              ]
+            },
+            "description": "Calculate delivery charges based on address/distance."
+          }
+        },
+        {
+          "name": "Confirm Checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"aba\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkout/:checkoutId/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkout", ":checkoutId", "confirm"],
+              "variable": [
+                {
+                  "key": "checkoutId",
+                  "value": "{{checkoutSessionId}}",
+                  "description": "Checkout session ID"
+                }
+              ]
+            },
+            "description": "Confirm checkout and create order with pending payment status. Payment methods: aba, acleda, wing, cash."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "checkoutSessionId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

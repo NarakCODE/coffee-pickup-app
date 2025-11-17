@@ -9,19 +9,28 @@ const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 interface TokenPayload {
   userId: string;
+  email: string;
+  role: 'user' | 'admin' | 'moderator';
 }
 
-interface RefreshTokenPayload extends TokenPayload {
+interface RefreshTokenPayload {
+  userId: string;
   tokenId: string;
 }
 
 /**
  * Generate JWT access token for a user
  * @param userId - User ID to encode in token
+ * @param email - User email to encode in token
+ * @param role - User role to encode in token
  * @returns JWT access token string
  */
-export const generateAccessToken = (userId: string): string => {
-  const payload: TokenPayload = { userId };
+export const generateAccessToken = (
+  userId: string,
+  email: string,
+  role: 'user' | 'admin' | 'moderator'
+): string => {
+  const payload: TokenPayload = { userId, email, role };
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
