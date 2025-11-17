@@ -69,9 +69,9 @@ categorySchema.pre('save', function (next) {
     });
   }
   next();
-}); 
+});
 
-// Indexes (slug index is created by unique: true)
+// Indexes (slug already has unique index)
 categorySchema.index({ parentId: 1 });
 categorySchema.index({ isActive: 1 });
 categorySchema.index({ displayOrder: 1 });

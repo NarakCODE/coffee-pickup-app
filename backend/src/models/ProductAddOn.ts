@@ -13,13 +13,11 @@ const productAddOnSchema = new Schema<IProductAddOn>(
       type: Schema.Types.ObjectId,
       ref: 'Product',
       required: [true, 'Product ID is required'],
-      index: true,
     },
     addOnId: {
       type: Schema.Types.ObjectId,
       ref: 'AddOn',
       required: [true, 'Add-on ID is required'],
-      index: true,
     },
     isDefault: {
       type: Boolean,

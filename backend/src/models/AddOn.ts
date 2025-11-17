@@ -34,7 +34,6 @@ const addOnSchema = new Schema<IAddOn>(
         message: '{VALUE} is not a valid add-on category',
       },
       required: [true, 'Add-on category is required'],
-      index: true,
     },
     imageUrl: {
       type: String,
@@ -43,7 +42,6 @@ const addOnSchema = new Schema<IAddOn>(
     isAvailable: {
       type: Boolean,
       default: true,
-      index: true,
     },
   },
   {

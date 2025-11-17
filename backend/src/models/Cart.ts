@@ -23,13 +23,11 @@ const cartSchema = new Schema<ICart>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: [true, 'User ID is required'],
-      index: true,
     },
     storeId: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
       required: [true, 'Store ID is required'],
-      index: true,
     },
     subtotal: {
       type: Number,
@@ -72,7 +70,6 @@ const cartSchema = new Schema<ICart>(
       type: String,
       enum: ['active', 'checked_out', 'abandoned'],
       default: 'active',
-      index: true,
     },
     expiresAt: {
       type: Date,

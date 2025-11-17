@@ -94,7 +94,6 @@ const userSchema = new Schema<IUser>(
     referralCode: {
       type: String,
       unique: true,
-      index: true,
     },
     referredBy: {
       type: String,
@@ -198,9 +197,7 @@ userSchema.set('toJSON', {
   },
 });
 
-// Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ referralCode: 1 });
+// Indexes (email and referralCode already have unique indexes)
 userSchema.index({ status: 1 });
 userSchema.index({ createdAt: 1 });
 

@@ -63,7 +63,6 @@ const productSchema = new Schema<IProduct>(
       type: String,
       required: [true, 'Product name is required'],
       trim: true,
-      index: true,
     },
     slug: {
       type: String,
@@ -80,7 +79,6 @@ const productSchema = new Schema<IProduct>(
       type: Schema.Types.ObjectId,
       ref: 'Category',
       required: [true, 'Category is required'],
-      index: true,
     },
     images: {
       type: [String],
@@ -122,17 +120,14 @@ const productSchema = new Schema<IProduct>(
     isAvailable: {
       type: Boolean,
       default: true,
-      index: true,
     },
     isFeatured: {
       type: Boolean,
       default: false,
-      index: true,
     },
     isBestSelling: {
       type: Boolean,
       default: false,
-      index: true,
     },
     allergens: {
       type: [String],
@@ -184,8 +179,7 @@ productSchema.methods.calculatePriceWithCustomizations = function (
   return totalPrice;
 };
 
-// ✅ Indexes for optimized querying
-productSchema.index({ slug: 1 });
+// ✅ Indexes for optimized querying (slug already has unique index)
 productSchema.index({ name: 1 });
 productSchema.index({ categoryId: 1 });
 productSchema.index({ isAvailable: 1 });
