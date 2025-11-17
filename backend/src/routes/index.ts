@@ -9,6 +9,7 @@ import searchRoutes from './searchRoutes.js';
 import favoriteRoutes from './favoriteRoutes.js';
 import cartRoutes from './cartRoutes.js';
 import checkoutRoutes from './checkoutRoutes.js';
+import paymentRoutes from './paymentRoutes.js';
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use('/search', searchRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/cart', cartRoutes);
 router.use('/checkout', checkoutRoutes);
+router.use('/payments', paymentRoutes);
 
 export default router;
