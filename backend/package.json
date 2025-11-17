@@ -38,6 +38,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.0",
     "morgan": "^1.10.0",
+    "pdfkit": "^0.17.2",
     "slugify": "^1.6.6"
   },
   "devDependencies": {
@@ -50,6 +51,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.9",
     "@types/node": "^24.9.1",
+    "@types/pdfkit": "^0.17.3",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "prettier": "^3.0.0",
