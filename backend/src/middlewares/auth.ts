@@ -17,6 +17,7 @@ declare module 'express-serve-static-core' {
 /**
  * Authentication middleware to protect routes
  * Verifies JWT token from Authorization header and attaches userId to request
+ * Requirements: 19.5 - Reject authentication for suspended users
  * @throws UnauthorizedError if token is missing or invalid
  */
 export const authenticate = asyncHandler(
@@ -38,6 +39,25 @@ export const authenticate = asyncHandler(
 
     // Verify token and extract user information
     const decoded = verifyAccessToken(token);
+
+    // Check if user account is suspended
+    // Import User model to check status
+    const { User } = await import('../models/User.js');
+    const user = await User.findById(decoded.userId).select('status').lean();
+
+    if (!user) {
+      throw new UnauthorizedError('User account not found');
+    }
+
+    if (user.status === 'suspended') {
+      throw new UnauthorizedError(
+        'Your account has been suspended. Please contact support.'
+      );
+    }
+
+    if (user.status === 'deleted') {
+      throw new UnauthorizedError('User account has been deleted');
+    }
 
     // Attach user information to request object for use in controllers
     req.userId = decoded.userId;

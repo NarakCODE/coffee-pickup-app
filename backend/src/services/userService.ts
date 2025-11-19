@@ -384,6 +384,116 @@ export class UserService {
     return { message: 'Account deleted successfully', reason };
   }
 
+  /**
+   * Get all users with pagination (Admin only)
+   * Requirements: 19.1
+   */
+  async getAllUsersWithPagination(
+    page: number = 1,
+    limit: number = 20,
+    filters?: { status?: string; role?: string; search?: string }
+  ) {
+    const skip = (page - 1) * limit;
+    const query: Record<string, unknown> = {};
+
+    // Apply filters
+    if (filters?.status) {
+      query.status = filters.status;
+    }
+
+    if (filters?.role) {
+      query.role = filters.role;
+    }
+
+    // Search by name or email
+    if (filters?.search) {
+      query.$or = [
+        { fullName: { $regex: filters.search, $options: 'i' } },
+        { email: { $regex: filters.search, $options: 'i' } },
+      ];
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(query),
+    ]);
+
+    return {
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Get user by ID (Admin only)
+   * Requirements: 19.2
+   */
+  async getUserByIdAdmin(userId: string) {
+    const user = await User.findById(userId).select('-password').lean();
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    return user;
+  }
+
+  /**
+   * Get user order history (Admin only)
+   * Requirements: 19.3
+   */
+  async getUserOrders(userId: string) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Import Order model dynamically to avoid circular dependency
+    const { Order } = await import('../models/Order.js');
+
+    const orders = await Order.find({ userId })
+      .populate('storeId', 'name address city')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return orders;
+  }
+
+  /**
+   * Update user status (Admin only)
+   * Requirements: 19.4
+   */
+  async updateUserStatus(
+    userId: string,
+    status: 'active' | 'suspended'
+  ): Promise<IUser> {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (user.status === 'deleted') {
+      throw new BadRequestError('Cannot modify deleted user account');
+    }
+
+    user.status = status;
+    await user.save();
+
+    return user;
+  }
+
   // Legacy methods for backward compatibility
   async getAllUsers() {
     return await User.find({ status: 'active' }).select('-password');

@@ -7,6 +7,10 @@ import {
   deleteUser,
   uploadAvatar,
   deleteAccount,
+  getAllUsersAdmin,
+  getUserByIdAdmin,
+  getUserOrdersAdmin,
+  updateUserStatusAdmin,
 } from '../controllers/userController.js';
 import { validateUser } from '../middlewares/validateRequest.js';
 import { authenticate } from '../middlewares/auth.js';
@@ -30,15 +34,63 @@ router.patch('/me/avatar', authenticate, upload.single('avatar'), uploadAvatar);
 router.delete('/me', authenticate, deleteAccount);
 
 /**
- * ADMIN: Get all users
- */
-router.get('/', authenticate, authorize({ roles: ['admin'] }), getAllUsers);
-
-/**
- * ADMIN or SELF: Get user by ID
+ * ADMIN: Get all users with pagination
+ * Requirements: 19.1
+ * GET /api/users?page=1&limit=20&status=active&role=user&search=john
  */
 router.get(
-  '/:id',
+  '/',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getAllUsersAdmin
+);
+
+/**
+ * ADMIN: Get user details by ID
+ * Requirements: 19.2
+ * GET /api/users/:userId
+ */
+router.get(
+  '/:userId',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getUserByIdAdmin
+);
+
+/**
+ * ADMIN: Get user order history
+ * Requirements: 19.3
+ * GET /api/users/:userId/orders
+ */
+router.get(
+  '/:userId/orders',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getUserOrdersAdmin
+);
+
+/**
+ * ADMIN: Update user status (active/suspended)
+ * Requirements: 19.4
+ * PATCH /api/users/:userId/status
+ */
+router.patch(
+  '/:userId/status',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  updateUserStatusAdmin
+);
+
+// Legacy endpoints for backward compatibility
+router.get(
+  '/legacy/all',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getAllUsers
+);
+
+router.get(
+  '/legacy/:id',
   authenticate,
   authorize({
     roles: ['admin'],
@@ -48,22 +100,16 @@ router.get(
   getUserById
 );
 
-/**
- * ADMIN: Create new user
- */
 router.post(
-  '/',
+  '/legacy/create',
   authenticate,
   authorize({ roles: ['admin'] }),
   validateUser,
   createUser
 );
 
-/**
- * ADMIN or SELF: Update user
- */
 router.put(
-  '/:id',
+  '/legacy/:id',
   authenticate,
   authorize({
     roles: ['admin'],
@@ -73,11 +119,8 @@ router.put(
   updateUser
 );
 
-/**
- * ADMIN or SELF: Delete user
- */
 router.delete(
-  '/:id',
+  '/legacy/:id',
   authenticate,
   authorize({
     roles: ['admin'],

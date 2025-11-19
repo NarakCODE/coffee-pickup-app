@@ -197,6 +197,112 @@ export const deleteAccount = asyncHandler(
   }
 );
 
+/**
+ * Get all users with pagination (Admin only)
+ * Requirements: 19.1
+ * GET /api/users
+ */
+export const getAllUsersAdmin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+    const role = req.query.role as string;
+    const search = req.query.search as string;
+
+    const filters: { status?: string; role?: string; search?: string } = {};
+    if (status) filters.status = status;
+    if (role) filters.role = role;
+    if (search) filters.search = search;
+
+    const result = await userService.getAllUsersWithPagination(
+      page,
+      limit,
+      filters
+    );
+
+    res.json({
+      success: true,
+      data: result.users,
+      pagination: result.pagination,
+    });
+  }
+);
+
+/**
+ * Get user details by ID (Admin only)
+ * Requirements: 19.2
+ * GET /api/users/:userId
+ */
+export const getUserByIdAdmin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.params.userId as string;
+
+    if (!userId) {
+      throw new BadRequestError('User ID is required');
+    }
+
+    const user = await userService.getUserByIdAdmin(userId);
+
+    res.json({
+      success: true,
+      data: user,
+    });
+  }
+);
+
+/**
+ * Get user order history (Admin only)
+ * Requirements: 19.3
+ * GET /api/users/:userId/orders
+ */
+export const getUserOrdersAdmin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.params.userId as string;
+
+    if (!userId) {
+      throw new BadRequestError('User ID is required');
+    }
+
+    const orders = await userService.getUserOrders(userId);
+
+    res.json({
+      success: true,
+      data: orders,
+    });
+  }
+);
+
+/**
+ * Update user status (Admin only)
+ * Requirements: 19.4
+ * PATCH /api/users/:userId/status
+ */
+export const updateUserStatusAdmin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.params.userId as string;
+    const { status } = req.body;
+
+    if (!userId) {
+      throw new BadRequestError('User ID is required');
+    }
+
+    if (!status || !['active', 'suspended'].includes(status)) {
+      throw new BadRequestError(
+        'Status is required and must be either "active" or "suspended"'
+      );
+    }
+
+    const user = await userService.updateUserStatus(userId, status);
+
+    res.json({
+      success: true,
+      data: user,
+      message: `User status updated to ${status}`,
+    });
+  }
+);
+
 // Legacy endpoints for backward compatibility
 export const getAllUsers = asyncHandler(
   async (_req: Request, res: Response) => {
