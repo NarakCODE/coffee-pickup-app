@@ -7,6 +7,7 @@ import {
 
 interface UpdateProfileData {
   fullName?: string;
+  email?: string;
   phoneNumber?: string;
   dateOfBirth?: Date;
   gender?: 'male' | 'female' | 'other';
@@ -19,6 +20,27 @@ interface UpdateSettingsData {
   pushNotifications?: boolean;
   language?: 'en' | 'km';
   currency?: 'USD' | 'KHR';
+}
+
+/**
+ * Validate email format
+ * Requirements: 18.5
+ */
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Validate phone number format (international format)
+ * Requirements: 18.5
+ */
+function validatePhoneNumber(phoneNumber: string): boolean {
+  // Accepts formats like: +1234567890, +12 345 678 90, +12-345-678-90
+  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+  // Remove spaces and dashes for validation
+  const cleanedPhone = phoneNumber.replace(/[\s-]/g, '');
+  return phoneRegex.test(cleanedPhone);
 }
 
 export class UserService {
@@ -46,7 +68,7 @@ export class UserService {
 
   /**
    * Update user profile information
-   * Requirements: 3.2
+   * Requirements: 3.2, 18.5
    */
   async updateProfile(userId: string, profileData: UpdateProfileData) {
     const user = await User.findById(userId);
@@ -59,12 +81,35 @@ export class UserService {
       throw new UnauthorizedError('Cannot update inactive account');
     }
 
+    // Validate email format if provided
+    if (profileData.email !== undefined) {
+      if (!validateEmail(profileData.email)) {
+        throw new BadRequestError('Invalid email format');
+      }
+      // Check if email is already taken by another user
+      const existingUser = await User.findOne({
+        email: profileData.email,
+        _id: { $ne: userId },
+      });
+      if (existingUser) {
+        throw new BadRequestError('Email is already in use');
+      }
+      user.email = profileData.email;
+    }
+
+    // Validate phone number format if provided
+    if (profileData.phoneNumber !== undefined) {
+      if (!validatePhoneNumber(profileData.phoneNumber)) {
+        throw new BadRequestError(
+          'Invalid phone number format. Use international format (e.g., +1234567890)'
+        );
+      }
+      user.phoneNumber = profileData.phoneNumber;
+    }
+
     // Update allowed fields
     if (profileData.fullName !== undefined) {
       user.fullName = profileData.fullName;
-    }
-    if (profileData.phoneNumber !== undefined) {
-      user.phoneNumber = profileData.phoneNumber;
     }
     if (profileData.dateOfBirth !== undefined) {
       user.dateOfBirth = profileData.dateOfBirth;
@@ -94,6 +139,29 @@ export class UserService {
     }
 
     user.profileImage = imageUrl;
+    await user.save();
+
+    return { profileImage: user.profileImage };
+  }
+
+  /**
+   * Upload avatar and update profile
+   * Requirements: 18.3
+   */
+  async uploadAvatar(userId: string, filePath: string) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    if (user.status !== 'active') {
+      throw new UnauthorizedError('Cannot update inactive account');
+    }
+
+    // In a real application, you would upload to cloud storage (S3, Cloudinary, etc.)
+    // For now, we'll store the file path
+    user.profileImage = filePath;
     await user.save();
 
     return { profileImage: user.profileImage };
@@ -206,8 +274,8 @@ export class UserService {
   }
 
   /**
-   * Delete user account (soft delete)
-   * Requirements: 3.6
+   * Delete user account with anonymization
+   * Requirements: 18.4
    */
   async deleteAccount(userId: string, password: string, reason?: string) {
     // Fetch user with password field
@@ -223,9 +291,29 @@ export class UserService {
       throw new UnauthorizedError('Password is incorrect');
     }
 
-    // Soft delete
+    // Anonymize user data
+    const timestamp = Date.now();
+    user.fullName = `Deleted User ${timestamp}`;
+    user.email = `deleted_${timestamp}@deleted.local`;
+    delete user.phoneNumber;
+    delete user.profileImage;
+    delete user.dateOfBirth;
+    delete user.gender;
+
+    // Clear preferences
+    user.preferences = {
+      notificationsEnabled: false,
+      emailNotifications: false,
+      smsNotifications: false,
+      pushNotifications: false,
+      language: 'en',
+      currency: 'USD',
+    };
+
+    // Mark as deleted
     user.status = 'deleted';
     user.deletedAt = new Date();
+
     await user.save();
 
     return { message: 'Account deleted successfully', reason };

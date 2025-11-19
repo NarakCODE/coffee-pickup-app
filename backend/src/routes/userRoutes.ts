@@ -5,12 +5,29 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  uploadAvatar,
+  deleteAccount,
 } from '../controllers/userController.js';
 import { validateUser } from '../middlewares/validateRequest.js';
 import { authenticate } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/authorize.js';
+import { upload } from '../config/multer.js';
 
 const router = Router();
+
+/**
+ * AUTHENTICATED: Upload avatar
+ * Requirements: 18.3
+ * PATCH /api/users/me/avatar
+ */
+router.patch('/me/avatar', authenticate, upload.single('avatar'), uploadAvatar);
+
+/**
+ * AUTHENTICATED: Delete own account
+ * Requirements: 18.4
+ * DELETE /api/users/me
+ */
+router.delete('/me', authenticate, deleteAccount);
 
 /**
  * ADMIN: Get all users

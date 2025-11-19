@@ -201,3 +201,116 @@ export const reorder = asyncHandler(
     res.status(200).json(response);
   }
 );
+
+/**
+ * @route   GET /orders/:orderId/receipt
+ * @desc    Generate and download PDF receipt (Admin only)
+ * @access  Private (Admin)
+ */
+export const getOrderReceipt = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const orderId = req.params.orderId!;
+
+    const pdfBuffer = await orderService.generateReceipt(orderId);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=receipt-${orderId}.pdf`
+    );
+    res.send(pdfBuffer);
+  }
+);
+
+/**
+ * @route   POST /orders/:orderId/notes
+ * @desc    Add internal notes to an order (Admin only)
+ * @access  Private (Admin)
+ */
+export const addInternalNotes = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const orderId = req.params.orderId!;
+    const { notes } = req.body;
+
+    if (!notes || typeof notes !== 'string' || notes.trim().length === 0) {
+      res.status(400).json({
+        success: false,
+        error: 'Notes are required',
+      });
+      return;
+    }
+
+    const order = await orderService.addInternalNotes(orderId, notes);
+
+    const response: ApiResponse<IOrder> = {
+      success: true,
+      data: order,
+      message: 'Internal notes added successfully',
+    };
+
+    res.status(200).json(response);
+  }
+);
+
+/**
+ * @route   PATCH /orders/:orderId/status
+ * @desc    Update order status (Admin only)
+ * @access  Private (Admin)
+ */
+export const updateOrderStatus = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const orderId = req.params.orderId!;
+    const { status } = req.body;
+
+    if (!status || typeof status !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Status is required',
+      });
+      return;
+    }
+
+    const order = await orderService.updateOrderStatus(
+      orderId,
+      status as OrderStatus
+    );
+
+    const response: ApiResponse<IOrder> = {
+      success: true,
+      data: order,
+      message: 'Order status updated successfully',
+    };
+
+    res.status(200).json(response);
+  }
+);
+
+/**
+ * @route   PATCH /orders/:orderId/assign
+ * @desc    Assign order to a driver (Admin only)
+ * @access  Private (Admin)
+ */
+export const assignDriver = asyncHandler(
+  async (req: Request, res: Response): Promise<void> => {
+    const orderId = req.params.orderId!;
+    const { driverId } = req.body;
+
+    if (!driverId || typeof driverId !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Driver ID is required',
+      });
+      return;
+    }
+
+    const order = await orderService.assignDriver(orderId, driverId);
+
+    const response: ApiResponse<IOrder> = {
+      success: true,
+      data: order,
+      message: 'Driver assigned successfully',
+    };
+
+    res.status(200).json(response);
+  }
+);

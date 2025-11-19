@@ -493,6 +493,307 @@ export class OrderService {
   }
 
   /**
+   * Generate PDF receipt for an order (Admin only)
+   */
+  async generateReceipt(orderId: string): Promise<Buffer> {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      throw new AppError('Invalid order ID', 400);
+    }
+
+    const order = await Order.findById(orderId)
+      .populate('storeId', 'name address city phone')
+      .lean();
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    // Get order items
+    const items = await OrderItem.find({ orderId: order._id }).lean();
+
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({ margin: 50 });
+        const chunks: Buffer[] = [];
+
+        doc.on('data', (chunk) => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', reject);
+
+        // Header
+        doc.fontSize(20).text('RECEIPT', { align: 'center' }).moveDown();
+
+        // Order details
+        doc
+          .fontSize(12)
+          .text(`Order Number: ${order.orderNumber}`)
+          .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`)
+          .text(`Status: ${order.status}`)
+          .text(`Payment Status: ${order.paymentStatus}`)
+          .moveDown();
+
+        // Store information
+        if (order.storeId && typeof order.storeId === 'object') {
+          const store = order.storeId as unknown as {
+            name: string;
+            address: string;
+            city: string;
+            phone: string;
+          };
+          doc
+            .fontSize(14)
+            .text('Store Information', { underline: true })
+            .fontSize(10)
+            .text(store.name)
+            .text(`${store.address}, ${store.city}`)
+            .text(`Phone: ${store.phone}`)
+            .moveDown();
+        }
+
+        // Customer information
+        doc
+          .fontSize(14)
+          .text('Customer Information', { underline: true })
+          .fontSize(10)
+          .text(`Customer ID: ${order.userId}`)
+          .moveDown();
+
+        // Delivery address
+        if (order.deliveryAddress) {
+          doc
+            .fontSize(14)
+            .text('Delivery Address', { underline: true })
+            .fontSize(10)
+            .text(order.deliveryAddress)
+            .moveDown();
+        }
+
+        // Items table
+        doc.fontSize(14).text('Order Items', { underline: true }).moveDown(0.5);
+
+        items.forEach((item) => {
+          doc
+            .fontSize(10)
+            .text(`${item.productName} x ${item.quantity}`, {
+              continued: true,
+            })
+            .text(`${item.totalPrice.toFixed(2)}`, { align: 'right' });
+
+          // Show customizations if any
+          if (
+            item.customization &&
+            Object.keys(item.customization).length > 0
+          ) {
+            doc
+              .fontSize(8)
+              .fillColor('gray')
+              .text(`  Customization: ${JSON.stringify(item.customization)}`)
+              .fillColor('black');
+          }
+
+          // Show add-ons if any
+          if (item.addOns && item.addOns.length > 0) {
+            const addOnNames = item.addOns.map((a) => a.name).join(', ');
+            doc
+              .fontSize(8)
+              .fillColor('gray')
+              .text(`  Add-ons: ${addOnNames}`)
+              .fillColor('black');
+          }
+        });
+
+        doc.moveDown();
+
+        // Totals
+        doc
+          .fontSize(10)
+          .text(`Subtotal:`, { continued: true })
+          .text(`${order.subtotal.toFixed(2)}`, { align: 'right' });
+
+        if (order.discount > 0) {
+          doc
+            .text(`Discount:`, { continued: true })
+            .text(`-${order.discount.toFixed(2)}`, { align: 'right' });
+        }
+
+        doc
+          .text(`Tax:`, { continued: true })
+          .text(`${order.tax.toFixed(2)}`, { align: 'right' });
+
+        if (order.deliveryFee > 0) {
+          doc
+            .text(`Delivery Fee:`, { continued: true })
+            .text(`${order.deliveryFee.toFixed(2)}`, { align: 'right' });
+        }
+
+        doc
+          .fontSize(12)
+          .text(`Total:`, { continued: true, underline: true })
+          .text(`${order.total.toFixed(2)}`, {
+            align: 'right',
+            underline: true,
+          });
+
+        doc.moveDown();
+
+        // Payment information
+        doc
+          .fontSize(10)
+          .text(`Payment Method: ${order.paymentMethod}`)
+          .text(`Payment Status: ${order.paymentStatus}`);
+
+        if (order.paymentProviderTransactionId) {
+          doc.text(`Transaction ID: ${order.paymentProviderTransactionId}`);
+        }
+
+        // Internal notes if any
+        if (order.internalNotes) {
+          doc
+            .moveDown()
+            .fontSize(10)
+            .fillColor('red')
+            .text('Internal Notes (Admin Only):', { underline: true })
+            .fillColor('black')
+            .text(order.internalNotes);
+        }
+
+        // Footer
+        doc
+          .moveDown(2)
+          .fontSize(8)
+          .text('This is an official receipt', { align: 'center' });
+
+        doc.end();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Add internal notes to an order (Admin only)
+   */
+  async addInternalNotes(orderId: string, notes: string): Promise<IOrder> {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      throw new AppError('Invalid order ID', 400);
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    // Append to existing internal notes
+    order.internalNotes = order.internalNotes
+      ? `${order.internalNotes}\n[${new Date().toISOString()}] ${notes}`
+      : `[${new Date().toISOString()}] ${notes}`;
+
+    await order.save();
+
+    return order;
+  }
+
+  /**
+   * Update order status (Admin only)
+   */
+  async updateOrderStatus(
+    orderId: string,
+    newStatus: OrderStatus
+  ): Promise<IOrder> {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      throw new AppError('Invalid order ID', 400);
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    // Validate status transition
+    if (!this.isValidStatusTransition(order.status, newStatus)) {
+      throw new AppError(
+        `Invalid status transition from ${order.status} to ${newStatus}`,
+        400
+      );
+    }
+
+    const oldStatus = order.status;
+    order.status = newStatus;
+
+    // Update timestamps based on status
+    if (newStatus === 'ready') {
+      order.actualReadyTime = new Date();
+    } else if (newStatus === 'picked_up') {
+      order.pickedUpAt = new Date();
+    } else if (newStatus === 'completed') {
+      order.completedAt = new Date();
+    } else if (newStatus === 'cancelled') {
+      order.cancelledAt = new Date();
+      order.cancelledBy = 'admin';
+    }
+
+    await order.save();
+
+    // Record status change in history
+    await OrderStatusHistory.create({
+      orderId: order._id,
+      status: newStatus,
+      notes: `Status changed from ${oldStatus} to ${newStatus} by admin`,
+      changedBy: 'admin',
+    });
+
+    // TODO: Send notification to user about status change
+    // This would be implemented when notification service is ready
+
+    return order;
+  }
+
+  /**
+   * Assign order to a driver (Admin only)
+   */
+  async assignDriver(orderId: string, driverId: string): Promise<IOrder> {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      throw new AppError('Invalid order ID', 400);
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(driverId)) {
+      throw new AppError('Invalid driver ID', 400);
+    }
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      throw new AppError('Order not found', 404);
+    }
+
+    // Validate order status - can only assign driver to confirmed or preparing orders
+    if (!['confirmed', 'preparing', 'ready'].includes(order.status)) {
+      throw new AppError(
+        `Cannot assign driver to order with status ${order.status}`,
+        400
+      );
+    }
+
+    order.assignedDriverId = new mongoose.Types.ObjectId(driverId);
+    await order.save();
+
+    // Record in status history
+    await OrderStatusHistory.create({
+      orderId: order._id,
+      status: order.status,
+      notes: `Driver ${driverId} assigned to order`,
+      changedBy: 'admin',
+    });
+
+    // TODO: Send notification to driver about assignment
+    // This would be implemented when notification service is ready
+
+    return order;
+  }
+
+  /**
    * Validate order status transition
    */
   private isValidStatusTransition(

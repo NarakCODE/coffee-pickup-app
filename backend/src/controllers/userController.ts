@@ -20,16 +20,17 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
 
 /**
  * Update authenticated user's profile
- * Requirements: 3.2
+ * Requirements: 3.2, 18.5
  * PUT /api/profile
  */
 export const updateProfile = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.userId as string;
-    const { fullName, phoneNumber, dateOfBirth, gender } = req.body;
+    const { fullName, email, phoneNumber, dateOfBirth, gender } = req.body;
 
     const user = await userService.updateProfile(userId, {
       fullName,
+      email,
       phoneNumber,
       dateOfBirth,
       gender,
@@ -63,6 +64,32 @@ export const uploadProfileImage = asyncHandler(
       success: true,
       data: result,
       message: 'Profile image updated successfully',
+    });
+  }
+);
+
+/**
+ * Upload avatar file
+ * Requirements: 18.3
+ * PATCH /api/users/me/avatar
+ */
+export const uploadAvatar = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.userId as string;
+
+    if (!req.file) {
+      throw new BadRequestError('No file uploaded');
+    }
+
+    // Get the file path
+    const filePath = `/uploads/avatars/${req.file.filename}`;
+
+    const result = await userService.uploadAvatar(userId, filePath);
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Avatar uploaded successfully',
     });
   }
 );
@@ -148,9 +175,9 @@ export const getReferralStats = asyncHandler(
 );
 
 /**
- * Delete user account
- * Requirements: 3.6
- * DELETE /api/profile
+ * Delete user account with anonymization
+ * Requirements: 18.4
+ * DELETE /api/users/me
  */
 export const deleteAccount = asyncHandler(
   async (req: Request, res: Response) => {

@@ -41,8 +41,10 @@ export interface IOrder extends Document {
   actualReadyTime?: Date;
   pickedUpAt?: Date;
   notes?: string;
+  internalNotes?: string;
+  assignedDriverId?: mongoose.Types.ObjectId;
   cancellationReason?: string;
-  cancelledBy?: 'customer' | 'store' | 'system';
+  cancelledBy?: 'customer' | 'store' | 'system' | 'admin';
   refundAmount?: number;
   refundStatus?: RefundStatus;
   createdAt: Date;
@@ -156,13 +158,21 @@ const orderSchema = new Schema<IOrder>(
       type: String,
       trim: true,
     },
+    internalNotes: {
+      type: String,
+      trim: true,
+    },
+    assignedDriverId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
     cancellationReason: {
       type: String,
       trim: true,
     },
     cancelledBy: {
       type: String,
-      enum: ['customer', 'store', 'system'],
+      enum: ['customer', 'store', 'system', 'admin'],
     },
     refundAmount: {
       type: Number,
