@@ -22,26 +22,11 @@ interface UpdateSettingsData {
   currency?: 'USD' | 'KHR';
 }
 
-/**
- * Validate email format
- * Requirements: 18.5
- */
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Validate phone number format (international format)
- * Requirements: 18.5
- */
-function validatePhoneNumber(phoneNumber: string): boolean {
-  // Accepts formats like: +1234567890, +12 345 678 90, +12-345-678-90
-  const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-  // Remove spaces and dashes for validation
-  const cleanedPhone = phoneNumber.replace(/[\s-]/g, '');
-  return phoneRegex.test(cleanedPhone);
-}
+import {
+  validateEmail,
+  validatePhoneNumber,
+  sanitizeString,
+} from '../utils/validators.js';
 
 export class UserService {
   /**
@@ -69,8 +54,87 @@ export class UserService {
   /**
    * Update user profile information
    * Requirements: 3.2, 18.5
+   *
+   * @param userId - The ID of the user to update
+   * @param profileData - Profile data to update
+   * @returns Updated user object
+   * @throws {NotFoundError} If user not found
+   * @throws {UnauthorizedError} If account is not active
+   * @throws {BadRequestError} If validation fails or email/phone already exists
    */
   async updateProfile(userId: string, profileData: UpdateProfileData) {
+    // Validate and sanitize inputs before database operations
+    const validationErrors: string[] = [];
+    const sanitizedData: UpdateProfileData = {};
+
+    // Validate and sanitize email
+    if (profileData.email !== undefined) {
+      const sanitizedEmail = sanitizeString(profileData.email.toLowerCase());
+      if (!validateEmail(sanitizedEmail)) {
+        validationErrors.push('Invalid email format');
+      } else {
+        sanitizedData.email = sanitizedEmail;
+      }
+    }
+
+    // Validate and sanitize phone number
+    if (profileData.phoneNumber !== undefined) {
+      const sanitizedPhone = sanitizeString(profileData.phoneNumber);
+      if (!validatePhoneNumber(sanitizedPhone)) {
+        validationErrors.push(
+          'Invalid phone number format. Use international format (e.g., +1234567890)'
+        );
+      } else {
+        sanitizedData.phoneNumber = sanitizedPhone;
+      }
+    }
+
+    // Sanitize full name
+    if (profileData.fullName !== undefined) {
+      const sanitizedName = sanitizeString(profileData.fullName);
+      if (sanitizedName.length < 2) {
+        validationErrors.push('Full name must be at least 2 characters long');
+      } else if (sanitizedName.length > 100) {
+        validationErrors.push('Full name must not exceed 100 characters');
+      } else {
+        sanitizedData.fullName = sanitizedName;
+      }
+    }
+
+    // Validate date of birth
+    if (profileData.dateOfBirth !== undefined) {
+      const dob = new Date(profileData.dateOfBirth);
+      const now = new Date();
+      const age = now.getFullYear() - dob.getFullYear();
+
+      if (isNaN(dob.getTime())) {
+        validationErrors.push('Invalid date of birth');
+      } else if (dob > now) {
+        validationErrors.push('Date of birth cannot be in the future');
+      } else if (age < 13) {
+        validationErrors.push('You must be at least 13 years old');
+      } else if (age > 120) {
+        validationErrors.push('Invalid date of birth');
+      } else {
+        sanitizedData.dateOfBirth = dob;
+      }
+    }
+
+    // Validate gender
+    if (profileData.gender !== undefined) {
+      if (!['male', 'female', 'other'].includes(profileData.gender)) {
+        validationErrors.push('Invalid gender value');
+      } else {
+        sanitizedData.gender = profileData.gender;
+      }
+    }
+
+    // Throw all validation errors at once
+    if (validationErrors.length > 0) {
+      throw new BadRequestError(validationErrors.join('; '));
+    }
+
+    // Fetch user from database
     const user = await User.findById(userId);
 
     if (!user) {
@@ -81,41 +145,42 @@ export class UserService {
       throw new UnauthorizedError('Cannot update inactive account');
     }
 
-    // Validate email format if provided
-    if (profileData.email !== undefined) {
-      if (!validateEmail(profileData.email)) {
-        throw new BadRequestError('Invalid email format');
-      }
-      // Check if email is already taken by another user
+    // Check if email is already taken by another user
+    if (sanitizedData.email && sanitizedData.email !== user.email) {
       const existingUser = await User.findOne({
-        email: profileData.email,
+        email: sanitizedData.email,
         _id: { $ne: userId },
       });
       if (existingUser) {
         throw new BadRequestError('Email is already in use');
       }
-      user.email = profileData.email;
+      user.email = sanitizedData.email;
     }
 
-    // Validate phone number format if provided
-    if (profileData.phoneNumber !== undefined) {
-      if (!validatePhoneNumber(profileData.phoneNumber)) {
-        throw new BadRequestError(
-          'Invalid phone number format. Use international format (e.g., +1234567890)'
-        );
+    // Check if phone number is already taken by another user
+    if (
+      sanitizedData.phoneNumber &&
+      sanitizedData.phoneNumber !== user.phoneNumber
+    ) {
+      const existingUser = await User.findOne({
+        phoneNumber: sanitizedData.phoneNumber,
+        _id: { $ne: userId },
+      });
+      if (existingUser) {
+        throw new BadRequestError('Phone number is already in use');
       }
-      user.phoneNumber = profileData.phoneNumber;
+      user.phoneNumber = sanitizedData.phoneNumber;
     }
 
     // Update allowed fields
-    if (profileData.fullName !== undefined) {
-      user.fullName = profileData.fullName;
+    if (sanitizedData.fullName !== undefined) {
+      user.fullName = sanitizedData.fullName;
     }
-    if (profileData.dateOfBirth !== undefined) {
-      user.dateOfBirth = profileData.dateOfBirth;
+    if (sanitizedData.dateOfBirth !== undefined) {
+      user.dateOfBirth = sanitizedData.dateOfBirth;
     }
-    if (profileData.gender !== undefined) {
-      user.gender = profileData.gender;
+    if (sanitizedData.gender !== undefined) {
+      user.gender = sanitizedData.gender;
     }
 
     await user.save();
