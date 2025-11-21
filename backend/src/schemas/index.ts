@@ -26,3 +26,6 @@ export * from './order.schema.js';
 export * from './payment.schema.js';
 export * from './search.schema.js';
 export * from './user.schema.js';
+export * from './store.schema.js';
+export * from './category.schema.js';
+export * from './product.schema.js';

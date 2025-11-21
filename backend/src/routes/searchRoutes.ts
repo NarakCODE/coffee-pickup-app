@@ -7,6 +7,12 @@ import {
   deleteSearch,
 } from '../controllers/searchController.js';
 import { authenticate } from '../middlewares/auth.js';
+import { validate } from '../middlewares/validate.js';
+import {
+  searchQuerySchema,
+  searchSuggestionsSchema,
+  deleteSearchSchema,
+} from '../schemas/index.js';
 
 const router = Router();
 
@@ -14,13 +20,13 @@ const router = Router();
  * Public search endpoint
  * GET /search?query=coffee&type=all
  */
-router.get('/', search);
+router.get('/', validate(searchQuerySchema), search);
 
 /**
  * Get autocomplete suggestions
  * GET /search/suggestions?query=cof
  */
-router.get('/suggestions', getSuggestions);
+router.get('/suggestions', validate(searchSuggestionsSchema), getSuggestions);
 
 /**
  * Get user's recent searches (authenticated)
@@ -38,6 +44,11 @@ router.delete('/recent', authenticate, deleteAllSearches);
  * Delete a specific search from history (authenticated)
  * DELETE /search/recent/:searchId
  */
-router.delete('/recent/:searchId', authenticate, deleteSearch);
+router.delete(
+  '/recent/:searchId',
+  authenticate,
+  validate(deleteSearchSchema),
+  deleteSearch
+);
 
 export default router;

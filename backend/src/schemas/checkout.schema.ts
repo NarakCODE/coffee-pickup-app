@@ -48,3 +48,19 @@ export type CheckoutParams = z.infer<typeof checkoutParamSchema>['params'];
 export type DeliveryChargesQuery = z.infer<
   typeof deliveryChargesSchema
 >['query'];
+
+/**
+ * Schema for confirming checkout
+ */
+export const confirmCheckoutSchema = z.object({
+  params: z.object({
+    checkoutId: objectIdSchema,
+  }),
+  body: z.object({
+    paymentMethod: z.enum(['ABA', 'ACLEDA', 'Wing', 'Cash']),
+  }),
+});
+
+export type ConfirmCheckoutInput = z.infer<
+  typeof confirmCheckoutSchema
+>['body'];

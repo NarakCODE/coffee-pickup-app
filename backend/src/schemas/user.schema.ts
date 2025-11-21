@@ -82,3 +82,48 @@ export type UpdateUserStatusInput = z.infer<
   typeof updateUserStatusSchema
 >['body'];
 export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>['query'];
+
+/**
+ * Schema for updating password
+ */
+export const updatePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z
+      .string()
+      .min(6, 'New password must be at least 6 characters'),
+  }),
+});
+
+/**
+ * Schema for updating user settings
+ */
+export const updateSettingsSchema = z.object({
+  body: userPreferencesSchema.partial(),
+});
+
+/**
+ * Schema for uploading profile image
+ */
+export const uploadProfileImageSchema = z.object({
+  body: z.object({
+    imageUrl: z.string().url('Invalid image URL'),
+  }),
+});
+
+/**
+ * Schema for deleting account
+ */
+export const deleteAccountSchema = z.object({
+  body: z.object({
+    password: z.string().min(1, 'Password is required'),
+    reason: z.string().optional(),
+  }),
+});
+
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>['body'];
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>['body'];
+export type UploadProfileImageInput = z.infer<
+  typeof uploadProfileImageSchema
+>['body'];
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>['body'];

@@ -16,6 +16,12 @@ import { validateUser } from '../middlewares/validateRequest.js';
 import { authenticate } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/authorize.js';
 import { upload } from '../config/multer.js';
+import { validate } from '../middlewares/validate.js';
+import {
+  getUsersQuerySchema,
+  userParamSchema,
+  updateUserStatusSchema,
+} from '../schemas/index.js';
 
 const router = Router();
 
@@ -42,6 +48,7 @@ router.get(
   '/',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(getUsersQuerySchema),
   getAllUsersAdmin
 );
 
@@ -54,6 +61,7 @@ router.get(
   '/:userId',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(userParamSchema),
   getUserByIdAdmin
 );
 
@@ -66,6 +74,7 @@ router.get(
   '/:userId/orders',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(userParamSchema),
   getUserOrdersAdmin
 );
 
@@ -78,6 +87,7 @@ router.patch(
   '/:userId/status',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(updateUserStatusSchema),
   updateUserStatusAdmin
 );
 

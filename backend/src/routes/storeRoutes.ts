@@ -3,6 +3,17 @@ import * as storeController from '../controllers/storeController.js';
 import * as productController from '../controllers/productController.js';
 import { authenticate } from '../middlewares/auth.js';
 import { authorize } from '../middlewares/authorize.js';
+import { validate } from '../middlewares/validate.js';
+import {
+  createStoreSchema,
+  getStoresQuerySchema,
+  storeSlugParamSchema,
+  idParamSchema,
+  getPickupTimesSchema,
+  storeIdParamSchema,
+  getStoreMenuSchema,
+  updateStoreSchema,
+} from '../schemas/index.js';
 
 const router = Router();
 
@@ -11,6 +22,7 @@ router.post(
   '/',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(createStoreSchema),
   storeController.createStore
 );
 
@@ -33,19 +45,23 @@ router.get(
  * - longitude: User's longitude (optional)
  * - radius: Search radius in kilometers (optional)
  */
-router.get('/', storeController.getAllStores);
+router.get('/', validate(getStoresQuerySchema), storeController.getAllStores);
 
 /**
  * GET /api/stores/slug/:slug
  * Get store by slug
  */
-router.get('/slug/:slug', storeController.getStoreBySlug);
+router.get(
+  '/slug/:slug',
+  validate(storeSlugParamSchema),
+  storeController.getStoreBySlug
+);
 
 /**
  * GET /api/stores/:id
  * Get store by ID
  */
-router.get('/:id', storeController.getStoreById);
+router.get('/:id', validate(idParamSchema), storeController.getStoreById);
 
 /**
  * GET /api/stores/:id/pickup-times
@@ -53,25 +69,41 @@ router.get('/:id', storeController.getStoreById);
  * Query params:
  * - date: Target date in ISO format (optional, defaults to today)
  */
-router.get('/:id/pickup-times', storeController.getPickupTimes);
+router.get(
+  '/:id/pickup-times',
+  validate(getPickupTimesSchema),
+  storeController.getPickupTimes
+);
 
 /**
  * GET /api/stores/:storeId/gallery
  * Get store gallery images
  */
-router.get('/:storeId/gallery', storeController.getStoreGallery);
+router.get(
+  '/:storeId/gallery',
+  validate(storeIdParamSchema),
+  storeController.getStoreGallery
+);
 
 /**
  * GET /api/stores/:storeId/hours
  * Get store opening hours and special hours
  */
-router.get('/:storeId/hours', storeController.getStoreHours);
+router.get(
+  '/:storeId/hours',
+  validate(storeIdParamSchema),
+  storeController.getStoreHours
+);
 
 /**
  * GET /api/stores/:storeId/location
  * Get store location details
  */
-router.get('/:storeId/location', storeController.getStoreLocation);
+router.get(
+  '/:storeId/location',
+  validate(storeIdParamSchema),
+  storeController.getStoreLocation
+);
 
 /**
  * GET /api/stores/:storeId/menu
@@ -84,7 +116,11 @@ router.get('/:storeId/location', storeController.getStoreLocation);
  * - minPrice: Minimum price filter (optional)
  * - maxPrice: Maximum price filter (optional)
  */
-router.get('/:storeId/menu', productController.getStoreMenu);
+router.get(
+  '/:storeId/menu',
+  validate(getStoreMenuSchema),
+  productController.getStoreMenu
+);
 
 // Admin-only routes - Update, Delete, Toggle Status
 /**
@@ -95,6 +131,7 @@ router.put(
   '/:id',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(updateStoreSchema),
   storeController.updateStore
 );
 
@@ -106,6 +143,7 @@ router.delete(
   '/:id',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(idParamSchema),
   storeController.deleteStore
 );
 
@@ -117,6 +155,7 @@ router.patch(
   '/:id/status',
   authenticate,
   authorize({ roles: ['admin'] }),
+  validate(idParamSchema),
   storeController.toggleStoreStatus
 );
 
