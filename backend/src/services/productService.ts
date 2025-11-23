@@ -13,6 +13,7 @@ import { AddOn } from '../models/AddOn.js';
 import { ProductAddOn } from '../models/ProductAddOn.js';
 import { Category } from '../models/Category.js';
 import { NotFoundError, BadRequestError } from '../utils/AppError.js';
+import { getAddOnsByProductId } from './addonService.js';
 
 interface ProductFilters {
   categoryId?: string;
@@ -78,7 +79,7 @@ export interface ProductAddOnResponse {
   category: string;
   imageUrl?: string;
   isAvailable: boolean;
-  isDefault: boolean;
+  // isDefault: boolean;
 }
 
 export interface ProductDetailResponse extends ProductResponse {
@@ -186,35 +187,7 @@ export const getProductById = async (
     .lean();
 
   // Get add-ons
-  const productAddOns = await ProductAddOn.find({
-    productId: product._id,
-  })
-    .populate('addOnId')
-    .lean();
-
-  const addOns = productAddOns
-    .map((pa) => {
-      const addOn = pa.addOnId as unknown as {
-        _id: mongoose.Types.ObjectId;
-        name: string;
-        description?: string;
-        price: number;
-        category: string;
-        imageUrl?: string;
-        isAvailable: boolean;
-      };
-      return {
-        id: addOn._id?.toString(),
-        name: addOn.name,
-        description: addOn.description,
-        price: addOn.price,
-        category: addOn.category,
-        imageUrl: addOn.imageUrl,
-        isAvailable: addOn.isAvailable,
-        isDefault: pa.isDefault,
-      };
-    })
-    .filter((addOn) => addOn.isAvailable);
+  const addOns = await getAddOnsByProductId(product._id.toString());
 
   return {
     ...product,
@@ -257,35 +230,7 @@ export const getProductBySlug = async (
     .lean();
 
   // Get add-ons
-  const productAddOns = await ProductAddOn.find({
-    productId: product._id,
-  })
-    .populate('addOnId')
-    .lean();
-
-  const addOns = productAddOns
-    .map((pa) => {
-      const addOn = pa.addOnId as unknown as {
-        _id: mongoose.Types.ObjectId;
-        name: string;
-        description?: string;
-        price: number;
-        category: string;
-        imageUrl?: string;
-        isAvailable: boolean;
-      };
-      return {
-        id: addOn._id?.toString(),
-        name: addOn.name,
-        description: addOn.description,
-        price: addOn.price,
-        category: addOn.category,
-        imageUrl: addOn.imageUrl,
-        isAvailable: addOn.isAvailable,
-        isDefault: pa.isDefault,
-      };
-    })
-    .filter((addOn) => addOn.isAvailable);
+  const addOns = await getAddOnsByProductId(product._id.toString());
 
   return {
     ...product,
@@ -371,35 +316,7 @@ export const getProductAddOns = async (productId: string): Promise<any[]> => {
     throw new BadRequestError('Invalid product ID');
   }
 
-  const productAddOns = await ProductAddOn.find({
-    productId,
-  })
-    .populate('addOnId')
-    .lean();
-
-  const addOns = productAddOns
-    .map((pa) => {
-      const addOn = pa.addOnId as unknown as {
-        _id: mongoose.Types.ObjectId;
-        name: string;
-        description?: string;
-        price: number;
-        category: string;
-        imageUrl?: string;
-        isAvailable: boolean;
-      };
-      return {
-        id: addOn._id?.toString(),
-        name: addOn.name,
-        description: addOn.description,
-        price: addOn.price,
-        category: addOn.category,
-        imageUrl: addOn.imageUrl,
-        isAvailable: addOn.isAvailable,
-        isDefault: pa.isDefault,
-      };
-    })
-    .filter((addOn) => addOn.isAvailable);
+  const addOns = await getAddOnsByProductId(productId);
 
   return addOns;
 };

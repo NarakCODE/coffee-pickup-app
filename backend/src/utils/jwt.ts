@@ -11,6 +11,8 @@ interface TokenPayload {
   userId: string;
   email: string;
   role: 'user' | 'admin' | 'moderator';
+  iat?: number;
+  exp?: number;
 }
 
 interface RefreshTokenPayload {

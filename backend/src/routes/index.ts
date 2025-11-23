@@ -14,6 +14,8 @@ import orderRoutes from './orderRoutes.js';
 import addressRoutes from './addressRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 
+import addonRoutes from './addonRoutes.js';
+
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -23,6 +25,7 @@ router.use('/profile', profileRoutes);
 router.use('/stores', storeRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
+router.use('/addons', addonRoutes);
 router.use('/search', searchRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/cart', cartRoutes);

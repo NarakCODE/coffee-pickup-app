@@ -232,3 +232,137 @@ export const updateSettings = asyncHandler(
     });
   }
 );
+
+/**
+ * Admin: Send notification to a specific user
+ * POST /notifications/send
+ */
+export const sendNotification = asyncHandler(
+  async (req: Request, res: Response) => {
+    const adminId = req.userId!;
+    const { userId, type, title, message, imageUrl, actionType, actionValue } =
+      req.body;
+
+    if (!userId || !title || !message) {
+      throw new BadRequestError('User ID, title, and message are required');
+    }
+
+    const notification = await notificationService.sendToUser(adminId, userId, {
+      type: type || 'system',
+      title,
+      message,
+      imageUrl,
+      actionType,
+      actionValue,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: notification,
+    });
+  }
+);
+
+/**
+ * Admin: Broadcast notification to all users
+ * POST /notifications/broadcast
+ */
+export const broadcastNotification = asyncHandler(
+  async (req: Request, res: Response) => {
+    const adminId = req.userId!;
+    const { type, title, message, imageUrl, actionType, actionValue } =
+      req.body;
+
+    if (!title || !message) {
+      throw new BadRequestError('Title and message are required');
+    }
+
+    const log = await notificationService.broadcast(adminId, {
+      type: type || 'announcement',
+      title,
+      message,
+      imageUrl,
+      actionType,
+      actionValue,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Broadcast initiated successfully',
+      data: log,
+    });
+  }
+);
+
+/**
+ * Admin: Send notification to user segment
+ * POST /notifications/segment
+ */
+export const sendToSegment = asyncHandler(
+  async (req: Request, res: Response) => {
+    const adminId = req.userId!;
+    const {
+      criteria,
+      type,
+      title,
+      message,
+      imageUrl,
+      actionType,
+      actionValue,
+    } = req.body;
+
+    if (!criteria || !title || !message) {
+      throw new BadRequestError('Criteria, title, and message are required');
+    }
+
+    const log = await notificationService.sendToSegment(adminId, criteria, {
+      type: type || 'promotion',
+      title,
+      message,
+      imageUrl,
+      actionType,
+      actionValue,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Segment notification initiated successfully',
+      data: log,
+    });
+  }
+);
+
+/**
+ * Admin: Get notification statistics
+ * GET /notifications/stats
+ */
+export const getNotificationStats = asyncHandler(
+  async (req: Request, res: Response) => {
+    const stats = await notificationService.getStats();
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  }
+);
+
+/**
+ * Admin: Get notification history
+ * GET /notifications/history
+ */
+export const getNotificationHistory = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { limit, skip } = req.query;
+
+    const history = await notificationService.getHistory(
+      limit ? parseInt(limit as string, 10) : 20,
+      skip ? parseInt(skip as string, 10) : 0
+    );
+
+    res.status(200).json({
+      success: true,
+      data: history,
+    });
+  }
+);

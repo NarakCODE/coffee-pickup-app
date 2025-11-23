@@ -43,7 +43,9 @@ export const authenticate = asyncHandler(
     // Check if user account is suspended
     // Import User model to check status
     const { User } = await import('../models/User.js');
-    const user = await User.findById(decoded.userId).select('status').lean();
+    const user = await User.findById(decoded.userId)
+      .select('status lastLogoutAt')
+      .lean();
 
     if (!user) {
       throw new UnauthorizedError('User account not found');
@@ -57,6 +59,17 @@ export const authenticate = asyncHandler(
 
     if (user.status === 'deleted') {
       throw new UnauthorizedError('User account has been deleted');
+    }
+
+    // Check if token was issued before the last logout
+    if (user.lastLogoutAt && decoded.iat) {
+      // Compare in milliseconds to avoid rounding issues
+      const tokenIssuedAtMs = decoded.iat * 1000;
+      const lastLogoutAtMs = new Date(user.lastLogoutAt).getTime();
+
+      if (tokenIssuedAtMs < lastLogoutAtMs) {
+        throw new UnauthorizedError('Session expired. Please login again.');
+      }
     }
 
     // Attach user information to request object for use in controllers

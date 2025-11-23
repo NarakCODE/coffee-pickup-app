@@ -9,6 +9,7 @@ export interface IAddOn extends Document {
   isAvailable: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 const addOnSchema = new Schema<IAddOn>(
@@ -43,6 +44,9 @@ const addOnSchema = new Schema<IAddOn>(
       type: Boolean,
       default: true,
     },
+    deletedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -53,6 +57,7 @@ const addOnSchema = new Schema<IAddOn>(
 addOnSchema.index({ isAvailable: 1 });
 addOnSchema.index({ category: 1 });
 addOnSchema.index({ category: 1, isAvailable: 1 });
+addOnSchema.index({ deletedAt: 1 });
 
 // ✅ Transform output
 addOnSchema.set('toJSON', {

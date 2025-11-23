@@ -409,7 +409,7 @@ export const refreshAccessToken = async (
 };
 
 /**
- * Logout user by revoking refresh token
+ * Logout user by revoking refresh token and invalidating access tokens
  * @param refreshTokenString - Refresh token string
  * @throws UnauthorizedError if refresh token is invalid
  */
@@ -428,6 +428,11 @@ export const logoutUser = async (
     tokenRecord.isRevoked = true;
     await tokenRecord.save();
   }
+
+  // Update user's lastLogoutAt to invalidate all current access tokens
+  await User.findByIdAndUpdate(decoded.userId, {
+    lastLogoutAt: new Date(),
+  });
 
   return {
     message: 'Logged out successfully',

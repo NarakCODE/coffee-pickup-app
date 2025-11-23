@@ -34,6 +34,7 @@ export interface IUser extends Document {
   };
   status: 'active' | 'suspended' | 'deleted';
   lastLoginAt?: Date;
+  lastLogoutAt?: Date;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
@@ -164,6 +165,9 @@ const userSchema = new Schema<IUser>(
       default: 'active',
     },
     lastLoginAt: {
+      type: Date,
+    },
+    lastLogoutAt: {
       type: Date,
     },
     deletedAt: {

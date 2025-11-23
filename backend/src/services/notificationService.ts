@@ -1,7 +1,10 @@
 import Notification, { type INotification } from '../models/Notification.js';
+import NotificationLog, {
+  type INotificationLog,
+} from '../models/NotificationLog.js';
 import DeviceToken, { type IDeviceToken } from '../models/DeviceToken.js';
 import { User } from '../models/User.js';
-import { BadRequestError, NotFoundError } from '../utils/AppError.js';
+import { NotFoundError } from '../utils/AppError.js';
 import mongoose from 'mongoose';
 
 interface RegisterDeviceDTO {
@@ -268,6 +271,10 @@ export const notificationService = {
    * Send push notification via FCM
    * This is a placeholder for FCM integration
    */
+  /**
+   * Send push notification via FCM
+   * This is a placeholder for FCM integration
+   */
   async sendPushNotification(
     userId: string,
     notification: INotification
@@ -290,5 +297,176 @@ export const notificationService = {
     );
     console.log(`Title: ${notification.title}`);
     console.log(`Message: ${notification.message}`);
+  },
+
+  /**
+   * Admin: Send notification to a specific user and log it
+   */
+  async sendToUser(
+    adminId: string,
+    userId: string,
+    data: CreateNotificationDTO
+  ): Promise<INotification> {
+    const notification = await this.createNotification(userId, data);
+
+    // Log the action
+    await NotificationLog.create({
+      adminId: new mongoose.Types.ObjectId(adminId),
+      type: 'individual',
+      recipientCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      title: data.title,
+      message: data.message,
+    });
+
+    return notification;
+  },
+
+  /**
+   * Admin: Broadcast notification to all users
+   */
+  async broadcast(
+    adminId: string,
+    data: CreateNotificationDTO
+  ): Promise<INotificationLog> {
+    // Find all active users
+    const users = await User.find({
+      isActive: true,
+      // deletedAt: null // Assuming soft delete logic if applicable
+    }).select('_id');
+
+    let successCount = 0;
+    let failureCount = 0;
+
+    // Process in batches to avoid memory issues
+    const batchSize = 100;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      const notifications = batch.map((user) => ({
+        userId: user._id,
+        ...data,
+      }));
+
+      try {
+        await Notification.insertMany(notifications);
+        successCount += batch.length;
+        // Trigger push notifications asynchronously for the batch
+        // batch.forEach(user => this.sendPushNotification(user._id.toString(), ...));
+      } catch (error) {
+        console.error('Error broadcasting notifications:', error);
+        failureCount += batch.length;
+      }
+    }
+
+    // Log the action
+    const log = await NotificationLog.create({
+      adminId: new mongoose.Types.ObjectId(adminId),
+      type: 'broadcast',
+      recipientCount: users.length,
+      successCount,
+      failureCount,
+      title: data.title,
+      message: data.message,
+    });
+
+    return log;
+  },
+
+  /**
+   * Admin: Send notification to a user segment
+   */
+  async sendToSegment(
+    adminId: string,
+    criteria: Record<string, any>,
+    data: CreateNotificationDTO
+  ): Promise<INotificationLog> {
+    // Build query based on criteria
+    const query: any = { isActive: true };
+
+    if (criteria.role) {
+      query.role = criteria.role;
+    }
+
+    if (criteria.loyaltyTier) {
+      query.loyaltyTier = criteria.loyaltyTier;
+    }
+
+    if (criteria.lastActiveBefore) {
+      query.lastLoginAt = { $lt: new Date(criteria.lastActiveBefore) };
+    }
+
+    const users = await User.find(query).select('_id');
+
+    let successCount = 0;
+    let failureCount = 0;
+
+    // Process in batches
+    const batchSize = 100;
+    for (let i = 0; i < users.length; i += batchSize) {
+      const batch = users.slice(i, i + batchSize);
+      const notifications = batch.map((user) => ({
+        userId: user._id,
+        ...data,
+      }));
+
+      try {
+        await Notification.insertMany(notifications);
+        successCount += batch.length;
+      } catch (error) {
+        console.error('Error sending segment notifications:', error);
+        failureCount += batch.length;
+      }
+    }
+
+    // Log the action
+    const log = await NotificationLog.create({
+      adminId: new mongoose.Types.ObjectId(adminId),
+      type: 'segment',
+      recipientCount: users.length,
+      successCount,
+      failureCount,
+      criteria,
+      title: data.title,
+      message: data.message,
+    });
+
+    return log;
+  },
+
+  /**
+   * Admin: Get notification statistics
+   */
+  async getStats(): Promise<any> {
+    const totalSent = await Notification.countDocuments();
+    const readCount = await Notification.countDocuments({ isRead: true });
+    const unreadCount = await Notification.countDocuments({ isRead: false });
+
+    // Calculate read rate
+    const readRate = totalSent > 0 ? (readCount / totalSent) * 100 : 0;
+
+    // Get distribution by type
+    const typeDistribution = await Notification.aggregate([
+      { $group: { _id: '$type', count: { $sum: 1 } } },
+    ]);
+
+    return {
+      totalSent,
+      readCount,
+      unreadCount,
+      readRate: Math.round(readRate * 100) / 100,
+      typeDistribution,
+    };
+  },
+
+  /**
+   * Admin: Get notification history
+   */
+  async getHistory(limit = 20, skip = 0): Promise<INotificationLog[]> {
+    return NotificationLog.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip)
+      .populate('adminId', 'fullName email');
   },
 };

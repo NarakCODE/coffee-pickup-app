@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { authenticate } from '../middlewares/auth.js';
 import {
   registerDevice,
   unregisterDevice,
@@ -11,7 +10,14 @@ import {
   deleteAllNotifications,
   getSettings,
   updateSettings,
+  sendNotification,
+  broadcastNotification,
+  sendToSegment,
+  getNotificationStats,
+  getNotificationHistory,
 } from '../controllers/notificationController.js';
+import { authenticate } from '../middlewares/auth.js';
+import { authorize } from '../middlewares/authorize.js';
 
 const router = Router();
 
@@ -23,15 +29,47 @@ router.post('/devices/register', registerDevice);
 router.delete('/devices/:tokenId', unregisterDevice);
 
 // Notification management
-router.get('/', getNotifications);
-router.get('/unread-count', getUnreadCount);
-router.patch('/:id/read', markAsRead);
-router.patch('/read-all', markAllAsRead);
-router.delete('/:id', deleteNotification);
-router.delete('/', deleteAllNotifications);
+router.get('/', authenticate, getNotifications);
+router.get('/unread-count', authenticate, getUnreadCount);
+router.patch('/:id/read', authenticate, markAsRead);
+router.patch('/read-all', authenticate, markAllAsRead);
+router.delete('/:id', authenticate, deleteNotification);
+router.delete('/', authenticate, deleteAllNotifications);
 
 // Notification settings
-router.get('/settings', getSettings);
-router.patch('/settings', updateSettings);
+router.get('/settings', authenticate, getSettings);
+router.patch('/settings', authenticate, updateSettings);
+
+// Admin routes
+router.post(
+  '/send',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  sendNotification
+);
+router.post(
+  '/broadcast',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  broadcastNotification
+);
+router.post(
+  '/segment',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  sendToSegment
+);
+router.get(
+  '/stats',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getNotificationStats
+);
+router.get(
+  '/history',
+  authenticate,
+  authorize({ roles: ['admin'] }),
+  getNotificationHistory
+);
 
 export default router;
