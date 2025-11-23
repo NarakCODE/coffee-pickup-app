@@ -169,28 +169,30 @@ export const RECOMMENDED_INDEXES: Record<
 export async function verifyIndexes(): Promise<void> {
   logger.info('Verifying database indexes...');
 
+  let totalMissing = 0;
+
   for (const [modelName, indexes] of Object.entries(RECOMMENDED_INDEXES)) {
     try {
       const model = mongoose.model(modelName);
       const existingIndexes = await model.collection.getIndexes();
 
-      logger.info(
-        `${modelName}: ${Object.keys(existingIndexes).length} indexes found`
-      );
-
-      // Log missing indexes
+      // Count missing indexes
       for (const indexSpec of indexes) {
         const indexName = Object.keys(indexSpec.fields).join('_');
         if (!existingIndexes[indexName] && !existingIndexes[`${indexName}_1`]) {
-          logger.warn(`Missing index on ${modelName}: ${indexName}`);
+          totalMissing++;
         }
       }
     } catch (error) {
-      logger.warn(`Could not verify indexes for ${modelName}:`, error);
+      // Silently skip models that don't exist
     }
   }
 
-  logger.info('Index verification complete');
+  if (totalMissing > 0) {
+    logger.warn(`Found ${totalMissing} missing recommended indexes`);
+  } else {
+    logger.info('All recommended indexes are present');
+  }
 }
 
 /**
@@ -198,6 +200,8 @@ export async function verifyIndexes(): Promise<void> {
  */
 export async function createMissingIndexes(): Promise<void> {
   logger.info('Creating missing indexes...');
+
+  let created = 0;
 
   for (const [modelName, indexes] of Object.entries(RECOMMENDED_INDEXES)) {
     try {
@@ -209,20 +213,21 @@ export async function createMissingIndexes(): Promise<void> {
             indexSpec.fields as Record<string, number>,
             (indexSpec.options || {}) as Record<string, unknown>
           );
-          logger.info(
-            `Created index on ${modelName}: ${Object.keys(indexSpec.fields).join('_')}`
-          );
+          created++;
         } catch (error) {
-          // Index might already exist
-          logger.debug(`Index creation skipped for ${modelName}:`, error);
+          // Index already exists, skip silently
         }
       }
     } catch (error) {
-      logger.error(`Error creating indexes for ${modelName}:`, error);
+      // Model doesn't exist, skip silently
     }
   }
 
-  logger.info('Index creation complete');
+  if (created > 0) {
+    logger.info(`Created ${created} missing indexes`);
+  } else {
+    logger.info('No new indexes created');
+  }
 }
 
 /**

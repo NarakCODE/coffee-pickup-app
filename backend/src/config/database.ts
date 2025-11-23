@@ -36,10 +36,8 @@ export const connectDB = async () => {
       console.log('Mongoose disconnected from MongoDB');
     });
 
-    // Enable query logging in development
-    if (process.env.NODE_ENV === 'development') {
-      mongoose.set('debug', true);
-    }
+    // Disable verbose query logging
+    mongoose.set('debug', false);
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
     process.exit(1);

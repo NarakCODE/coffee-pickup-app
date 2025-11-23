@@ -1,6 +1,9 @@
 import express from 'express';
 import morgan from 'morgan';
 import compression from 'compression';
+import swaggerUi from 'swagger-ui-express';
+import yaml from 'js-yaml';
+import fs from 'fs';
 import { config } from './config/env.js';
 import { connectDB } from './config/database.js';
 import routes from './routes/index.js';
@@ -46,9 +49,30 @@ if (config.nodeEnv === 'development') {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// API Documentation (Swagger UI)
+try {
+  const openApiSpec = yaml.load(fs.readFileSync('./openapi.yaml', 'utf8'));
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(openApiSpec as swaggerUi.JsonObject, {
+      customSiteTitle: 'Corner Coffee API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
+    })
+  );
+  console.log('📚 API Documentation available at /api-docs');
+} catch (error) {
+  console.warn('⚠️  Could not load OpenAPI specification:', error);
+}
+
 // Routes
 app.get('/', (_req, res) => {
-  res.json({ message: 'API is running' });
+  res.json({
+    message: 'Corner Coffee API',
+    version: '1.0.0',
+    documentation: '/api-docs',
+    health: '/api/config/health',
+  });
 });
 
 app.use('/api', routes);
