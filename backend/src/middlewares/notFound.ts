@@ -1,5 +1,7 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
+import { NotFoundError } from '../utils/AppError.js';
 
-export const notFound = (_req: Request, res: Response) => {
-  res.status(404).json({ message: 'Route not found' });
+export const notFound = (req: Request, _res: Response, next: NextFunction) => {
+  const error = new NotFoundError(`Not Found - ${req.originalUrl}`);
+  next(error);
 };

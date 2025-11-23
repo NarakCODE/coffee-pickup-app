@@ -1,20 +1,47 @@
 import type { Request, Response, NextFunction } from 'express';
+import { ZodError, type ZodIssue } from 'zod';
 import { AppError } from '../utils/AppError.js';
 import { ErrorCodes } from '../utils/errorCodes.js';
+
+/**
+ * Formatted validation error structure
+ */
+interface FormattedValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
+
+/**
+ * Format Zod validation errors into a user-friendly structure
+ * @param issues - Array of Zod validation issues
+ * @returns Formatted error array
+ */
+const formatZodErrors = (issues: ZodIssue[]): FormattedValidationError[] => {
+  return issues.map((issue) => ({
+    field: issue.path.join('.') || 'root',
+    message: issue.message,
+    code: issue.code,
+  }));
+};
 
 export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   err: any,
   _req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ) => {
   console.error(err);
 
-  let error = { ...err };
-  error.message = err.message;
-  error.stack = err.stack;
+  let error = err;
+
+  // Handle Zod Validation Error
+  if (err instanceof ZodError) {
+    const errors = formatZodErrors(err.issues);
+    const message = 'Validation failed';
+    error = new AppError(message, 400, ErrorCodes.VAL_INVALID_INPUT, errors);
+  }
 
   // Handle Mongoose CastError (Invalid ID)
   if (err.name === 'CastError') {
