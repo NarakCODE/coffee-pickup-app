@@ -13,6 +13,8 @@ import paymentRoutes from './paymentRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import addressRoutes from './addressRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
+import announcementRoutes from './announcementRoutes.js';
+import reportRoutes from './reportRoutes.js';
 
 import addonRoutes from './addonRoutes.js';
 
@@ -33,5 +35,7 @@ router.use('/checkout', checkoutRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/orders', orderRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/announcements', announcementRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

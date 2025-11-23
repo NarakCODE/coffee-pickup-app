@@ -80,3 +80,31 @@ export const authenticate = asyncHandler(
     next();
   }
 );
+
+/**
+ * Optional authentication middleware
+ * Attempts to verify token if present, but does not throw if missing
+ */
+export const optionalAuthenticate = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+
+      if (token) {
+        try {
+          const decoded = verifyAccessToken(token);
+          req.userId = decoded.userId;
+          req.userEmail = decoded.email;
+          req.userRole = decoded.role;
+        } catch {
+          // Ignore invalid tokens for optional auth
+          // We just treat them as guests
+        }
+      }
+    }
+
+    next();
+  }
+);
