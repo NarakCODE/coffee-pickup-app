@@ -8,6 +8,12 @@ import { Product } from '../models/Product.js';
 import { AddOn } from '../models/AddOn.js';
 import { AppError } from '../utils/AppError.js';
 import PDFDocument from 'pdfkit';
+import {
+  parsePaginationParams,
+  buildPaginationResult,
+  type PaginationParams,
+  type PaginationResult,
+} from '../utils/pagination.js';
 
 interface OrderFilters {
   status?: OrderStatus;
@@ -32,13 +38,14 @@ interface OrderTracking {
 
 export class OrderService {
   /**
-   * Get orders with filters based on user role
+   * Get orders with filters based on user role (with pagination)
    */
   async getOrders(
     userId: string,
     role: string,
-    filters?: OrderFilters
-  ): Promise<IOrder[]> {
+    filters?: OrderFilters,
+    paginationParams?: PaginationParams
+  ): Promise<PaginationResult<IOrder>> {
     const query: Record<string, unknown> = {};
 
     // Non-admin users can only see their own orders
@@ -67,12 +74,32 @@ export class OrderService {
       }
     }
 
-    const orders = await Order.find(query)
-      .populate('storeId', 'name address city')
-      .sort({ createdAt: -1 })
-      .lean();
+    // Parse pagination parameters
+    const { page, limit, skip, sortBy, sortOrder } = parsePaginationParams(
+      paginationParams || {}
+    );
 
-    return orders as unknown as IOrder[];
+    // Build sort object
+    const sort: Record<string, 1 | -1> = { [sortBy]: sortOrder };
+
+    // Execute query with pagination and projection
+    const [orders, total] = await Promise.all([
+      Order.find(query)
+        .select('-internalNotes') // Exclude internal notes for non-admin users
+        .populate('storeId', 'name address city')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Order.countDocuments(query),
+    ]);
+
+    return buildPaginationResult(
+      orders as unknown as IOrder[],
+      total,
+      page,
+      limit
+    );
   }
 
   /**

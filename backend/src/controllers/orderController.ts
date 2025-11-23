@@ -8,7 +8,7 @@ const orderService = new OrderService();
 
 /**
  * @route   GET /orders
- * @desc    Get user's orders (or all orders for admin)
+ * @desc    Get user's orders (or all orders for admin) with pagination
  * @access  Private
  */
 export const getOrders = asyncHandler(
@@ -41,11 +41,27 @@ export const getOrders = asyncHandler(
       filters.endDate = new Date(req.query.endDate as string);
     }
 
-    const orders = await orderService.getOrders(userId, role, filters);
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
 
-    const response: ApiResponse<IOrder[]> = {
+    const result = await orderService.getOrders(
+      userId,
+      role,
+      filters,
+      paginationParams
+    );
+
+    const response: ApiResponse = {
       success: true,
-      data: orders,
+      data: result.data,
+      pagination: result.pagination,
       message: 'Orders retrieved successfully',
     };
 

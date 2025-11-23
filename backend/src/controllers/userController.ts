@@ -204,8 +204,6 @@ export const deleteAccount = asyncHandler(
  */
 export const getAllUsersAdmin = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
     const status = req.query.status as string;
     const role = req.query.role as string;
     const search = req.query.search as string;
@@ -215,15 +213,24 @@ export const getAllUsersAdmin = asyncHandler(
     if (role) filters.role = role;
     if (search) filters.search = search;
 
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
     const result = await userService.getAllUsersWithPagination(
-      page,
-      limit,
+      paginationParams,
       filters
     );
 
     res.json({
       success: true,
-      data: result.users,
+      data: result.data,
       pagination: result.pagination,
     });
   }

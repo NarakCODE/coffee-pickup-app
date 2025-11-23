@@ -22,22 +22,36 @@ import addonRoutes from './addonRoutes.js';
 
 const router = Router();
 
+// Authentication routes
 router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
+
+// User management routes
+// Note: Address routes must be mounted before user routes to avoid path conflicts
 router.use('/users/me/addresses', addressRoutes);
+router.use('/users', userRoutes);
 router.use('/profile', profileRoutes);
+
+// Store and product routes
 router.use('/stores', storeRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/products', productRoutes);
 router.use('/addons', addonRoutes);
+
+// Search and favorites
 router.use('/search', searchRoutes);
 router.use('/favorites', favoriteRoutes);
+
+// Shopping and checkout
 router.use('/cart', cartRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/payments', paymentRoutes);
 router.use('/orders', orderRoutes);
+
+// Notifications and announcements
 router.use('/notifications', notificationRoutes);
 router.use('/announcements', announcementRoutes);
+
+// Admin features
 router.use('/reports', reportRoutes);
 router.use('/support', supportRoutes);
 router.use('/config', configRoutes);

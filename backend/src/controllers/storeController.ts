@@ -22,14 +22,31 @@ export const createStore = asyncHandler(
  */
 export const getAllStoresAdmin = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const stores = await storeService.getAllStoresAdmin();
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    // Parse filters
+    const filters = {
+      city: req.query.city as string,
+      isActive: req.query.isActive ? req.query.isActive === 'true' : undefined,
+    };
+
+    const result = await storeService.getAllStoresAdmin(
+      paginationParams,
+      filters
+    );
 
     res.status(200).json({
       success: true,
-      data: {
-        stores,
-        count: stores.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   }
 );
@@ -41,10 +58,16 @@ export const getAllStoresAdmin = asyncHandler(
  */
 export const getAllStores = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { latitude, longitude, radius } = req.query;
+    const { latitude, longitude, radius, city } = req.query;
 
     // Parse and validate location filters if provided
-    let filters;
+    let filters: {
+      latitude?: number;
+      longitude?: number;
+      radius?: number;
+      city?: string;
+    } = {};
+
     if (latitude || longitude || radius) {
       // Validate that all location params are provided together
       if (!latitude || !longitude || !radius) {
@@ -86,14 +109,26 @@ export const getAllStores = asyncHandler(
       };
     }
 
-    const stores = await storeService.getAllStores(filters);
+    if (city) {
+      filters.city = city as string;
+    }
+
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    const result = await storeService.getAllStores(filters, paginationParams);
 
     res.status(200).json({
       success: true,
-      data: {
-        stores,
-        count: stores.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   }
 );

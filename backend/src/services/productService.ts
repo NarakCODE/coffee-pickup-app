@@ -14,6 +14,12 @@ import { ProductAddOn } from '../models/ProductAddOn.js';
 import { Category } from '../models/Category.js';
 import { NotFoundError, BadRequestError } from '../utils/AppError.js';
 import { getAddOnsByProductId } from './addonService.js';
+import {
+  parsePaginationParams,
+  buildPaginationResult,
+  type PaginationParams,
+  type PaginationResult,
+} from '../utils/pagination.js';
 
 interface ProductFilters {
   categoryId?: string;
@@ -88,13 +94,15 @@ export interface ProductDetailResponse extends ProductResponse {
 }
 
 /**
- * Get products with optional filtering
+ * Get products with optional filtering and pagination
  * @param filters - Optional filters for products
- * @returns Array of products
+ * @param paginationParams - Pagination parameters
+ * @returns Paginated products
  */
 export const getProducts = async (
-  filters?: ProductFilters
-): Promise<ProductResponse[]> => {
+  filters?: ProductFilters,
+  paginationParams?: PaginationParams
+): Promise<PaginationResult<ProductResponse>> => {
   // Build query
   const query: mongoose.FilterQuery<IProduct> = {
     isAvailable: true,
@@ -140,17 +148,36 @@ export const getProducts = async (
     ];
   }
 
-  // Execute query with category population
-  const products = await Product.find(query)
-    .populate('categoryId', 'name slug imageUrl icon')
-    .sort({ displayOrder: 1, name: 1 })
-    .lean();
+  // Parse pagination parameters
+  const { page, limit, skip, sortBy, sortOrder } = parsePaginationParams(
+    paginationParams || {}
+  );
 
-  return products.map((product) => ({
+  // Build sort object - default to displayOrder, then name
+  const sort: Record<string, 1 | -1> =
+    sortBy === 'createdAt'
+      ? { [sortBy]: sortOrder }
+      : { displayOrder: 1, name: 1 };
+
+  // Execute query with pagination and projection
+  const [products, total] = await Promise.all([
+    Product.find(query)
+      .select('-__v') // Exclude version key
+      .populate('categoryId', 'name slug imageUrl icon')
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(query),
+  ]);
+
+  const mappedProducts = products.map((product) => ({
     ...product,
     id: product._id?.toString(),
     category: product.categoryId,
   })) as unknown as ProductResponse[];
+
+  return buildPaginationResult(mappedProducts, total, page, limit);
 };
 
 /**
@@ -248,16 +275,21 @@ export const getProductBySlug = async (
  * Search products by query string
  * @param query - Search query
  * @param filters - Optional additional filters
- * @returns Array of matching products
+ * @param paginationParams - Pagination parameters
+ * @returns Paginated matching products
  */
 export const searchProducts = async (
   query: string,
-  filters?: Omit<ProductFilters, 'search'>
-): Promise<ProductResponse[]> => {
-  return getProducts({
-    ...filters,
-    search: query,
-  });
+  filters?: Omit<ProductFilters, 'search'>,
+  paginationParams?: PaginationParams
+): Promise<PaginationResult<ProductResponse>> => {
+  return getProducts(
+    {
+      ...filters,
+      search: query,
+    },
+    paginationParams
+  );
 };
 
 /**
@@ -265,12 +297,14 @@ export const searchProducts = async (
  * Note: StoreInventory model not yet implemented, so returning all available products
  * @param storeId - Store ID
  * @param filters - Optional filters
- * @returns Array of products available at the store
+ * @param paginationParams - Pagination parameters
+ * @returns Paginated products available at the store
  */
 export const getProductsByStore = async (
   storeId: string,
-  filters?: ProductFilters
-): Promise<ProductResponse[]> => {
+  filters?: ProductFilters,
+  paginationParams?: PaginationParams
+): Promise<PaginationResult<ProductResponse>> => {
   // Validate store ID
   if (!mongoose.Types.ObjectId.isValid(storeId)) {
     throw new BadRequestError('Invalid store ID');
@@ -278,7 +312,7 @@ export const getProductsByStore = async (
 
   // TODO: When StoreInventory is implemented, filter by store availability
   // For now, return all available products
-  return getProducts(filters);
+  return getProducts(filters, paginationParams);
 };
 
 /**
@@ -378,11 +412,13 @@ export const calculateProductPrice = async (
 /**
  * Get products by category
  * @param categoryId - Category ID
- * @returns Array of products in the category
+ * @param paginationParams - Pagination parameters
+ * @returns Paginated products in the category
  */
 export const getProductsByCategory = async (
-  categoryId: string
-): Promise<ProductResponse[]> => {
+  categoryId: string,
+  paginationParams?: PaginationParams
+): Promise<PaginationResult<ProductResponse>> => {
   if (!mongoose.Types.ObjectId.isValid(categoryId)) {
     throw new BadRequestError('Invalid category ID');
   }
@@ -393,7 +429,7 @@ export const getProductsByCategory = async (
     throw new NotFoundError('Category not found');
   }
 
-  return getProducts({ categoryId });
+  return getProducts({ categoryId }, paginationParams);
 };
 
 /**

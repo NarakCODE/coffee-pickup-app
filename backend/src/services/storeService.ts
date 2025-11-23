@@ -1,10 +1,18 @@
 import { Store, type IStore } from '../models/Store.js';
 import { NotFoundError } from '../utils/AppError.js';
+import {
+  parsePaginationParams,
+  buildPaginationResult,
+  type PaginationParams,
+  type PaginationResult,
+} from '../utils/pagination.js';
 
 interface StoreFilters {
-  latitude?: number;
-  longitude?: number;
-  radius?: number; // in kilometers
+  latitude?: number | undefined;
+  longitude?: number | undefined;
+  radius?: number | undefined; // in kilometers
+  city?: string | undefined;
+  isActive?: boolean | undefined;
 }
 
 /**
@@ -46,12 +54,45 @@ export const createStore = async (storeData: any): Promise<IStore> => {
 };
 
 /**
- * Get all stores including inactive ones (Admin only)
- * @returns Array of all stores
+ * Get all stores including inactive ones (Admin only) with pagination
+ * @param paginationParams - Pagination parameters
+ * @param filters - Optional filters
+ * @returns Paginated stores
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getAllStoresAdmin = async (): Promise<any[]> => {
-  const stores = await Store.find({}).sort({ createdAt: -1 }).lean();
+export const getAllStoresAdmin = async (
+  paginationParams?: PaginationParams,
+  filters?: StoreFilters
+): Promise<PaginationResult<any>> => {
+  const query: Record<string, unknown> = {};
+
+  // Apply filters
+  if (filters?.city) {
+    query.city = { $regex: filters.city, $options: 'i' };
+  }
+
+  if (filters?.isActive !== undefined) {
+    query.isActive = filters.isActive;
+  }
+
+  // Parse pagination parameters
+  const { page, limit, skip, sortBy, sortOrder } = parsePaginationParams(
+    paginationParams || {}
+  );
+
+  // Build sort object
+  const sort: Record<string, 1 | -1> = { [sortBy]: sortOrder };
+
+  // Execute query with pagination
+  const [stores, total] = await Promise.all([
+    Store.find(query)
+      .select('-__v') // Exclude version key
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Store.countDocuments(query),
+  ]);
 
   const result = [];
   for (const store of stores) {
@@ -62,27 +103,60 @@ export const getAllStoresAdmin = async (): Promise<any[]> => {
       isOpenNow: storeDoc ? storeDoc.isOpenNow() : false,
     });
   }
-  return result;
+
+  return buildPaginationResult(result, total, page, limit);
 };
 
 /**
- * Get all active stores with optional location-based filtering
+ * Get all active stores with optional location-based filtering and pagination
  * @param filters - Optional filters for location-based search
- * @returns Array of stores with distance if location provided
+ * @param paginationParams - Pagination parameters
+ * @returns Paginated stores with distance if location provided
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getAllStores = async (filters?: StoreFilters): Promise<any[]> => {
-  // Get all active stores
-  const stores = await Store.find({ isActive: true }).sort({ name: 1 }).lean();
+export const getAllStores = async (
+  filters?: StoreFilters,
+  paginationParams?: PaginationParams
+): Promise<PaginationResult<any>> => {
+  const query: Record<string, unknown> = { isActive: true };
 
-  // If location filters provided, calculate distances and filter by radius
+  // Apply city filter
+  if (filters?.city) {
+    query.city = { $regex: filters.city, $options: 'i' };
+  }
+
+  // Parse pagination parameters
+  const { page, limit, skip, sortBy, sortOrder } = parsePaginationParams(
+    paginationParams || {}
+  );
+
+  // If location filters provided, use geospatial query
   if (
     filters?.latitude !== undefined &&
     filters?.longitude !== undefined &&
     filters?.radius !== undefined
   ) {
-    const storesWithDistance = [];
+    // Use MongoDB geospatial query for better performance
+    query.location = {
+      $near: {
+        $geometry: {
+          type: 'Point',
+          coordinates: [filters.longitude, filters.latitude],
+        },
+        $maxDistance: filters.radius * 1000, // Convert km to meters
+      },
+    };
 
+    // For geospatial queries, we can't use skip/limit effectively
+    // So we'll fetch and then paginate in memory
+    const stores = await Store.find(query)
+      .select('-__v')
+      .limit(limit * page) // Fetch enough for current page
+      .lean();
+
+    const total = await Store.countDocuments(query);
+
+    const storesWithDistance = [];
     for (const store of stores) {
       const distance = calculateDistance(
         filters.latitude,
@@ -91,24 +165,30 @@ export const getAllStores = async (filters?: StoreFilters): Promise<any[]> => {
         store.longitude
       );
 
-      if (distance <= filters.radius) {
-        storesWithDistance.push({
-          ...store,
-          id: store._id?.toString(),
-          distance,
-          isOpenNow: await Store.findById(store._id).then((s) =>
-            s ? s.isOpenNow() : false
-          ),
-        });
-      }
+      const storeDoc = await Store.findById(store._id);
+      storesWithDistance.push({
+        ...store,
+        id: store._id?.toString(),
+        distance,
+        isOpenNow: storeDoc ? storeDoc.isOpenNow() : false,
+      });
     }
 
-    // Sort by distance
-    storesWithDistance.sort((a, b) => a.distance - b.distance);
-    return storesWithDistance;
+    // Apply pagination
+    const paginatedStores = storesWithDistance.slice(skip, skip + limit);
+
+    return buildPaginationResult(paginatedStores, total, page, limit);
   }
 
-  // Return stores with isOpenNow status
+  // Standard query with pagination
+  const sort: Record<string, 1 | -1> = { [sortBy]: sortOrder };
+
+  const [stores, total] = await Promise.all([
+    Store.find(query).select('-__v').sort(sort).skip(skip).limit(limit).lean(),
+    Store.countDocuments(query),
+  ]);
+
+  // Add isOpenNow status
   const result = [];
   for (const store of stores) {
     const storeDoc = await Store.findById(store._id);
@@ -118,7 +198,8 @@ export const getAllStores = async (filters?: StoreFilters): Promise<any[]> => {
       isOpenNow: storeDoc ? storeDoc.isOpenNow() : false,
     });
   }
-  return result;
+
+  return buildPaginationResult(result, total, page, limit);
 };
 
 /**

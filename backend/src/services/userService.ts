@@ -4,6 +4,12 @@ import {
   BadRequestError,
   UnauthorizedError,
 } from '../utils/AppError.js';
+import {
+  parsePaginationParams,
+  buildPaginationResult,
+  type PaginationParams,
+  type PaginationResult,
+} from '../utils/pagination.js';
 
 interface UpdateProfileData {
   fullName?: string;
@@ -389,11 +395,9 @@ export class UserService {
    * Requirements: 19.1
    */
   async getAllUsersWithPagination(
-    page: number = 1,
-    limit: number = 20,
+    paginationParams: PaginationParams,
     filters?: { status?: string; role?: string; search?: string }
-  ) {
-    const skip = (page - 1) * limit;
+  ): Promise<PaginationResult<IUser>> {
     const query: Record<string, unknown> = {};
 
     // Apply filters
@@ -413,25 +417,30 @@ export class UserService {
       ];
     }
 
+    // Parse pagination parameters
+    const { page, limit, skip, sortBy, sortOrder } =
+      parsePaginationParams(paginationParams);
+
+    // Build sort object
+    const sort: Record<string, 1 | -1> = { [sortBy]: sortOrder };
+
+    // Execute query with pagination and projection
     const [users, total] = await Promise.all([
       User.find(query)
-        .select('-password')
-        .sort({ createdAt: -1 })
+        .select('-password') // Exclude sensitive fields
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean(),
       User.countDocuments(query),
     ]);
 
-    return {
-      users,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    };
+    return buildPaginationResult(
+      users as unknown as IUser[],
+      total,
+      page,
+      limit
+    );
   }
 
   /**

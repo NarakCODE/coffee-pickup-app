@@ -69,14 +69,22 @@ export const getProducts = asyncHandler(
       filters.search = search as string;
     }
 
-    const products = await productService.getProducts(filters);
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    const result = await productService.getProducts(filters, paginationParams);
 
     res.status(200).json({
       success: true,
-      data: {
-        products,
-        count: products.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   }
 );
@@ -188,15 +196,27 @@ export const searchProducts = asyncHandler(
       filters.maxPrice = max;
     }
 
-    const products = await productService.searchProducts(q as string, filters);
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    const result = await productService.searchProducts(
+      q as string,
+      filters,
+      paginationParams
+    );
 
     res.status(200).json({
       success: true,
-      data: {
-        query: q,
-        products,
-        count: products.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
+      message: 'Products found',
     });
   }
 );
@@ -260,15 +280,26 @@ export const getStoreMenu = asyncHandler(
       filters.maxPrice = max;
     }
 
-    const products = await productService.getProductsByStore(storeId, filters);
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    const result = await productService.getProductsByStore(
+      storeId,
+      filters,
+      paginationParams
+    );
 
     res.status(200).json({
       success: true,
-      data: {
-        storeId,
-        products,
-        count: products.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   }
 );
@@ -333,15 +364,25 @@ export const getProductsByCategory = asyncHandler(
       throw new BadRequestError('Category ID is required');
     }
 
-    const products = await productService.getProductsByCategory(categoryId);
+    // Parse pagination params
+    const paginationParams = {
+      page: req.query.page ? parseInt(req.query.page as string, 10) : undefined,
+      limit: req.query.limit
+        ? parseInt(req.query.limit as string, 10)
+        : undefined,
+      sortBy: req.query.sortBy as string,
+      sortOrder: req.query.sortOrder as 'asc' | 'desc',
+    };
+
+    const result = await productService.getProductsByCategory(
+      categoryId,
+      paginationParams
+    );
 
     res.status(200).json({
       success: true,
-      data: {
-        categoryId,
-        products,
-        count: products.length,
-      },
+      data: result.data,
+      pagination: result.pagination,
     });
   }
 );
