@@ -1,6 +1,14 @@
 import mongoose from 'mongoose';
-import { Product } from '../models/Product.js';
-import { ProductCustomization } from '../models/ProductCustomization.js';
+import {
+  Product,
+  type IProduct,
+  type INutritionalInfo,
+} from '../models/Product.js';
+import {
+  ProductCustomization,
+  type IProductCustomization,
+  type ICustomizationOption,
+} from '../models/ProductCustomization.js';
 import { AddOn } from '../models/AddOn.js';
 import { ProductAddOn } from '../models/ProductAddOn.js';
 import { Category } from '../models/Category.js';
@@ -16,16 +24,78 @@ interface ProductFilters {
   search?: string;
 }
 
+export interface ProductCustomizationResult {
+  id: string;
+  productId: mongoose.Types.ObjectId;
+  customizationType: IProductCustomization['customizationType'];
+  options: ICustomizationOption[];
+  isRequired: boolean;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PopulatedCategory {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  slug: string;
+  imageUrl?: string;
+  icon?: string;
+}
+
+export interface ProductResponse {
+  id: string;
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  slug: string;
+  description: string;
+  categoryId: PopulatedCategory | mongoose.Types.ObjectId;
+  category: PopulatedCategory | mongoose.Types.ObjectId;
+  images: string[];
+  basePrice: number;
+  currency: 'USD' | 'KHR';
+  preparationTime: number;
+  calories?: number;
+  rating?: number;
+  totalReviews: number;
+  isAvailable: boolean;
+  isFeatured: boolean;
+  isBestSelling: boolean;
+  allergens: string[];
+  tags: string[];
+  nutritionalInfo?: INutritionalInfo;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date;
+}
+
+export interface ProductAddOnResponse {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  isAvailable: boolean;
+  isDefault: boolean;
+}
+
+export interface ProductDetailResponse extends ProductResponse {
+  customizations: ProductCustomizationResult[];
+  addOns: ProductAddOnResponse[];
+}
+
 /**
  * Get products with optional filtering
  * @param filters - Optional filters for products
  * @returns Array of products
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getProducts = async (filters?: ProductFilters): Promise<any[]> => {
+export const getProducts = async (
+  filters?: ProductFilters
+): Promise<ProductResponse[]> => {
   // Build query
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const query: any = {
+  const query: mongoose.FilterQuery<IProduct> = {
     isAvailable: true,
     deletedAt: null,
   };
@@ -79,7 +149,7 @@ export const getProducts = async (filters?: ProductFilters): Promise<any[]> => {
     ...product,
     id: product._id?.toString(),
     category: product.categoryId,
-  }));
+  })) as unknown as ProductResponse[];
 };
 
 /**
@@ -88,8 +158,9 @@ export const getProducts = async (filters?: ProductFilters): Promise<any[]> => {
  * @returns Product details with customizations and add-ons
  * @throws NotFoundError if product not found or unavailable
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getProductById = async (productId: string): Promise<any> => {
+export const getProductById = async (
+  productId: string
+): Promise<ProductDetailResponse> => {
   // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(productId)) {
     throw new BadRequestError('Invalid product ID');
@@ -154,7 +225,7 @@ export const getProductById = async (productId: string): Promise<any> => {
       id: c._id?.toString(),
     })),
     addOns,
-  };
+  } as unknown as ProductDetailResponse;
 };
 
 /**
@@ -163,8 +234,9 @@ export const getProductById = async (productId: string): Promise<any> => {
  * @returns Product details with customizations and add-ons
  * @throws NotFoundError if product not found or unavailable
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getProductBySlug = async (slug: string): Promise<any> => {
+export const getProductBySlug = async (
+  slug: string
+): Promise<ProductDetailResponse> => {
   const product = await Product.findOne({
     slug,
     isAvailable: true,
@@ -224,7 +296,7 @@ export const getProductBySlug = async (slug: string): Promise<any> => {
       id: c._id?.toString(),
     })),
     addOns,
-  };
+  } as unknown as ProductDetailResponse;
 };
 
 /**
@@ -236,8 +308,7 @@ export const getProductBySlug = async (slug: string): Promise<any> => {
 export const searchProducts = async (
   query: string,
   filters?: Omit<ProductFilters, 'search'>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any[]> => {
+): Promise<ProductResponse[]> => {
   return getProducts({
     ...filters,
     search: query,
@@ -254,8 +325,7 @@ export const searchProducts = async (
 export const getProductsByStore = async (
   storeId: string,
   filters?: ProductFilters
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<any[]> => {
+): Promise<ProductResponse[]> => {
   // Validate store ID
   if (!mongoose.Types.ObjectId.isValid(storeId)) {
     throw new BadRequestError('Invalid store ID');
@@ -271,10 +341,9 @@ export const getProductsByStore = async (
  * @param productId - Product ID
  * @returns Array of customization options
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getProductCustomizations = async (
   productId: string
-): Promise<any[]> => {
+): Promise<ProductCustomizationResult[]> => {
   if (!mongoose.Types.ObjectId.isValid(productId)) {
     throw new BadRequestError('Invalid product ID');
   }
@@ -394,10 +463,9 @@ export const calculateProductPrice = async (
  * @param categoryId - Category ID
  * @returns Array of products in the category
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getProductsByCategory = async (
   categoryId: string
-): Promise<any[]> => {
+): Promise<ProductResponse[]> => {
   if (!mongoose.Types.ObjectId.isValid(categoryId)) {
     throw new BadRequestError('Invalid category ID');
   }

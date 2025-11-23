@@ -21,6 +21,7 @@ import {
   getUsersQuerySchema,
   userParamSchema,
   updateUserStatusSchema,
+  deleteAccountSchema,
 } from '../schemas/index.js';
 
 const router = Router();
@@ -37,7 +38,12 @@ router.patch('/me/avatar', authenticate, upload.single('avatar'), uploadAvatar);
  * Requirements: 18.4
  * DELETE /api/users/me
  */
-router.delete('/me', authenticate, deleteAccount);
+router.delete(
+  '/me',
+  authenticate,
+  validate(deleteAccountSchema),
+  deleteAccount
+);
 
 /**
  * ADMIN: Get all users with pagination

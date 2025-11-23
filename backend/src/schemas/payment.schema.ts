@@ -23,7 +23,7 @@ export const confirmPaymentSchema = z.object({
       .min(1, 'Transaction ID is required')
       .max(100, 'Transaction ID must be 100 characters or less')
       .optional(),
-    paymentDetails: z.record(z.unknown()).optional(),
+    paymentDetails: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 

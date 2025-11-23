@@ -6,6 +6,355 @@
   },
   "item": [
     {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register Initiate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register/initiate"
+          }
+        },
+        {
+          "name": "Register Verify",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"John Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\",\n    \"otpCode\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register/verify"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"accessToken\", jsonData.data.accessToken);",
+                  "pm.environment.set(\"refreshToken\", jsonData.data.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"otpCode\": \"123456\",\n    \"newPassword\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/reset-password"
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"john@example.com\",\n    \"verificationType\": \"registration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/resend-otp"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/refresh-token"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/logout"
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"John Updated\",\n    \"phoneNumber\": \"+85512345678\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/profile"
+          }
+        },
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"currentPassword\": \"password123\",\n    \"newPassword\": \"newpassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/profile/password"
+          }
+        },
+        {
+          "name": "Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"notificationsEnabled\": true,\n    \"language\": \"km\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/profile/settings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Address",
+      "item": [
+        {
+          "name": "Get Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/me/addresses"
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"label\": \"Home\",\n    \"fullName\": \"John Doe\",\n    \"phoneNumber\": \"+85512345678\",\n    \"addressLine1\": \"123 Street\",\n    \"city\": \"Phnom Penh\",\n    \"state\": \"Phnom Penh\",\n    \"country\": \"Cambodia\",\n    \"latitude\": 11.55,\n    \"longitude\": 104.91\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/users/me/addresses"
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"label\": \"Office\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/users/me/addresses/:addressId"
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/me/addresses/:addressId"
+          }
+        },
+        {
+          "name": "Set Default Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/me/addresses/:addressId/default"
+          }
+        }
+      ]
+    },
+    {
       "name": "Stores",
       "item": [
         {
@@ -17,57 +366,7 @@
               "raw": "{{baseUrl}}/api/stores",
               "host": ["{{baseUrl}}"],
               "path": ["api", "stores"]
-            },
-            "description": "Get all active stores. Optionally filter by location using latitude, longitude, and radius query parameters."
-          }
-        },
-        {
-          "name": "Get All Stores (With Location Filter)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores?latitude=11.5564&longitude=104.9282&radius=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores"],
-              "query": [
-                {
-                  "key": "latitude",
-                  "value": "11.5564",
-                  "description": "User's latitude"
-                },
-                {
-                  "key": "longitude",
-                  "value": "104.9282",
-                  "description": "User's longitude"
-                },
-                {
-                  "key": "radius",
-                  "value": "10",
-                  "description": "Search radius in kilometers"
-                }
-              ]
-            },
-            "description": "Get stores within a specific radius from user's location"
-          }
-        },
-        {
-          "name": "Get All Stores - Admin (Including Inactive)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/admin/all",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", "admin", "all"]
-            },
-            "description": "Get all stores including inactive ones (Admin only). Use this to see newly created stores that haven't been activated yet."
+            }
           }
         },
         {
@@ -75,126 +374,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get store details by ID"
-          }
-        },
-        {
-          "name": "Get Store by Slug",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/slug/:slug",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", "slug", ":slug"],
-              "variable": [
-                {
-                  "key": "slug",
-                  "value": "",
-                  "description": "Store slug"
-                }
-              ]
-            },
-            "description": "Get store details by slug"
-          }
-        },
-        {
-          "name": "Get Store Pickup Times",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:id/pickup-times?date=2025-11-16",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":id", "pickup-times"],
-              "query": [
-                {
-                  "key": "date",
-                  "value": "2025-11-16",
-                  "description": "Target date in ISO format (optional)"
-                }
-              ],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get available pickup time slots for a store on a specific date"
-          }
-        },
-        {
-          "name": "Get Store Gallery",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:storeId/gallery",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":storeId", "gallery"],
-              "variable": [
-                {
-                  "key": "storeId",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get gallery images for a store"
-          }
-        },
-        {
-          "name": "Get Store Hours",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:storeId/hours",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":storeId", "hours"],
-              "variable": [
-                {
-                  "key": "storeId",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get opening hours, special hours, and current open status for a store"
-          }
-        },
-        {
-          "name": "Get Store Location",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:storeId/location",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":storeId", "location"],
-              "variable": [
-                {
-                  "key": "storeId",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get location details including address and coordinates for a store"
+            "url": "{{baseUrl}}/api/stores/:storeId"
           }
         },
         {
@@ -202,59 +382,98 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:storeId/menu?categoryId=&isFeatured=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":storeId", "menu"],
-              "query": [
-                {
-                  "key": "categoryId",
-                  "value": "",
-                  "description": "Filter by category (optional)"
-                },
-                {
-                  "key": "isFeatured",
-                  "value": "true",
-                  "description": "Filter featured products (optional)"
-                },
-                {
-                  "key": "isBestSelling",
-                  "value": "",
-                  "description": "Filter best selling products (optional)",
-                  "disabled": true
-                },
-                {
-                  "key": "tags",
-                  "value": "",
-                  "description": "Filter by tags (optional)",
-                  "disabled": true
-                },
-                {
-                  "key": "minPrice",
-                  "value": "",
-                  "description": "Minimum price filter (optional)",
-                  "disabled": true
-                },
-                {
-                  "key": "maxPrice",
-                  "value": "",
-                  "description": "Maximum price filter (optional)",
-                  "disabled": true
-                }
-              ],
-              "variable": [
-                {
-                  "key": "storeId",
-                  "value": "",
-                  "description": "Store ID"
-                }
-              ]
-            },
-            "description": "Get menu (products) for a specific store with optional filters"
+            "url": "{{baseUrl}}/api/stores/:storeId/menu"
           }
         },
         {
-          "name": "Create Store (Admin)",
+          "name": "Get Pickup Times",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/stores/:storeId/pickup-times"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products"
+          }
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/search?q=coffee",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "coffee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/products/:productId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "Get Category Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/categories/:categoryId/products"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cart"
+          }
+        },
+        {
+          "name": "Add Item",
           "request": {
             "method": "POST",
             "header": [
@@ -262,62 +481,22 @@
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Corner Coffee Downtown\",\n  \"slug\": \"corner-coffee-downtown\",\n  \"description\": \"Premium coffee shop in downtown area\",\n  \"address\": \"123 Main Street\",\n  \"city\": \"Phnom Penh\",\n  \"state\": \"Phnom Penh\",\n  \"postalCode\": \"12000\",\n  \"country\": \"Cambodia\",\n  \"latitude\": 11.5564,\n  \"longitude\": 104.9282,\n  \"phoneNumber\": \"+855 12 345 678\",\n  \"email\": \"downtown@cornercoffee.com\",\n  \"openingHours\": {\n    \"monday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"tuesday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"wednesday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"thursday\": { \"open\": \"07:00\", \"close\": \"20:00\" },\n    \"friday\": { \"open\": \"07:00\", \"close\": \"21:00\" },\n    \"saturday\": { \"open\": \"08:00\", \"close\": \"21:00\" },\n    \"sunday\": { \"open\": \"08:00\", \"close\": \"20:00\" }\n  },\n  \"images\": [\"https://example.com/store1.jpg\"],\n  \"isActive\": false\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/stores",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores"]
-            },
-            "description": "Create a new store (Admin only). Store is created with inactive status by default."
-          }
-        },
-        {
-          "name": "Update Store (Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Corner Coffee Downtown - Updated\",\n  \"description\": \"Updated description\",\n  \"phoneNumber\": \"+855 12 999 888\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": "Store ID"
+              "raw": "{\n    \"productId\": \"{{productId}}\",\n    \"quantity\": 1,\n    \"customization\": {\n        \"size\": \"medium\",\n        \"sugarLevel\": \"medium\",\n        \"iceLevel\": \"medium\"\n    }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
-            "description": "Update store details (Admin only)"
+            "url": "{{baseUrl}}/api/cart/items"
           }
         },
         {
-          "name": "Toggle Store Status (Admin)",
+          "name": "Update Item Quantity",
           "request": {
             "method": "PATCH",
             "header": [
@@ -327,23 +506,20 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:id/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":id", "status"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": "Store ID"
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
-            "description": "Toggle store active/inactive status (Admin only)"
+            "url": "{{baseUrl}}/api/cart/items/:itemId"
           }
         },
         {
-          "name": "Delete Store (Admin)",
+          "name": "Remove Item",
           "request": {
             "method": "DELETE",
             "header": [
@@ -353,19 +529,77 @@
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/stores/:id",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "stores", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "",
-                  "description": "Store ID"
+            "url": "{{baseUrl}}/api/cart/items/:itemId"
+          }
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cart"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders"
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/orders/:orderId"
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"reason\": \"Changed mind\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
-            "description": "Delete store and cascade delete related categories and products (Admin only)"
+            "url": "{{baseUrl}}/api/orders/:orderId/cancel"
           }
         }
       ]
@@ -382,23 +616,13 @@
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/validate",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", "validate"]
-            },
-            "description": "Validate cart before proceeding to checkout. Checks cart items, product availability, prices, and delivery address."
+            "url": "{{baseUrl}}/api/checkout/validate"
           }
         },
         {
-          "name": "Create Checkout Session",
+          "name": "Create Session",
           "request": {
             "method": "POST",
             "header": [
@@ -406,151 +630,9 @@
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout"]
-            },
-            "description": "Create a checkout session with 15-minute expiration. Returns session ID and checkout details."
-          }
-        },
-        {
-          "name": "Get Checkout Session",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/:checkoutId",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", ":checkoutId"],
-              "variable": [
-                {
-                  "key": "checkoutId",
-                  "value": "{{checkoutSessionId}}",
-                  "description": "Checkout session ID"
-                }
-              ]
-            },
-            "description": "Get checkout session details including items, totals, and expiration time."
-          }
-        },
-        {
-          "name": "Get Payment Methods",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/payment-methods",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", "payment-methods"]
-            },
-            "description": "Get list of available payment methods (ABA, ACLEDA, Wing, Cash on Delivery)."
-          }
-        },
-        {
-          "name": "Apply Coupon",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"couponCode\": \"WELCOME10\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/:checkoutId/apply-coupon",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", ":checkoutId", "apply-coupon"],
-              "variable": [
-                {
-                  "key": "checkoutId",
-                  "value": "{{checkoutSessionId}}",
-                  "description": "Checkout session ID"
-                }
-              ]
-            },
-            "description": "Apply a promo code to the checkout. Validates code, usage limits, validity dates, and minimum order amount."
-          }
-        },
-        {
-          "name": "Remove Coupon",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/:checkoutId/remove-coupon",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", ":checkoutId", "remove-coupon"],
-              "variable": [
-                {
-                  "key": "checkoutId",
-                  "value": "{{checkoutSessionId}}",
-                  "description": "Checkout session ID"
-                }
-              ]
-            },
-            "description": "Remove applied coupon from checkout and recalculate totals."
-          }
-        },
-        {
-          "name": "Get Delivery Charges",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/delivery-charges?addressId=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", "delivery-charges"],
-              "query": [
-                {
-                  "key": "addressId",
-                  "value": "",
-                  "description": "Address ID to calculate delivery fee"
-                }
-              ]
-            },
-            "description": "Calculate delivery charges based on address/distance."
+            "url": "{{baseUrl}}/api/checkout"
           }
         },
         {
@@ -562,106 +644,41 @@
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"aba\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/checkout/:checkoutId/confirm",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "checkout", ":checkoutId", "confirm"],
-              "variable": [
-                {
-                  "key": "checkoutId",
-                  "value": "{{checkoutSessionId}}",
-                  "description": "Checkout session ID"
+              "raw": "{\n    \"paymentMethod\": \"Cash\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
-            "description": "Confirm checkout and create order with pending payment status. Payment methods: aba, acleda, wing, cash."
+            "url": "{{baseUrl}}/api/checkout/:checkoutId/confirm"
           }
         }
       ]
     },
     {
-      "name": "Payment",
+      "name": "Favorites",
       "item": [
         {
-          "name": "Create Payment Intent",
+          "name": "Get Favorites",
           "request": {
-            "method": "POST",
+            "method": "GET",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/payments/:orderId/intent",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "payments", ":orderId", "intent"],
-              "variable": [
-                {
-                  "key": "orderId",
-                  "value": "{{orderId}}",
-                  "description": "Order ID to create payment intent for"
-                }
-              ]
-            },
-            "description": "Create a payment intent for an order. This prepares the payment with the payment provider and returns intent details including provider intent ID. Order must be in 'pending' payment status."
-          },
-          "response": [
-            {
-              "name": "Success Response",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/payments/:orderId/intent",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "payments", ":orderId", "intent"],
-                  "variable": [
-                    {
-                      "key": "orderId",
-                      "value": "673a1234567890abcdef1234"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"673a9876543210fedcba9876\",\n    \"orderId\": \"673a1234567890abcdef1234\",\n    \"amount\": 25.50,\n    \"currency\": \"USD\",\n    \"paymentMethod\": \"aba\",\n    \"status\": \"pending\",\n    \"providerIntentId\": \"ABA-INTENT-L8K9M2N-X7Y3Z1\",\n    \"createdAt\": \"2024-11-17T10:30:00.000Z\"\n  },\n  \"message\": \"Payment intent created successfully\"\n}"
-            }
-          ]
+            "url": "{{baseUrl}}/api/favorites"
+          }
         },
         {
-          "name": "Confirm Payment",
+          "name": "Add Favorite",
           "request": {
             "method": "POST",
             "header": [
@@ -669,220 +686,79 @@
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"paymentMethod\": \"aba\",\n  \"providerTransactionId\": \"ABA-TXN-1234567890\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/payments/:orderId/confirm",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "payments", ":orderId", "confirm"],
-              "variable": [
-                {
-                  "key": "orderId",
-                  "value": "{{orderId}}",
-                  "description": "Order ID to confirm payment for"
-                }
-              ]
-            },
-            "description": "Confirm payment for an order. Verifies payment with the payment provider and updates order status to 'confirmed' on success. If payment fails, order status remains 'pending_payment' and payment status is set to 'failed'."
-          },
-          "response": [
-            {
-              "name": "Success Response",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"paymentMethod\": \"aba\",\n  \"providerTransactionId\": \"ABA-TXN-1234567890\"\n}"
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/payments/:orderId/confirm",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "payments", ":orderId", "confirm"],
-                  "variable": [
-                    {
-                      "key": "orderId",
-                      "value": "673a1234567890abcdef1234"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"673a1234567890abcdef1234\",\n    \"orderNumber\": \"ORD-L8K9M2N-X7Y3\",\n    \"status\": \"confirmed\",\n    \"paymentStatus\": \"completed\",\n    \"total\": 25.50\n  },\n  \"transactionId\": \"ABA-TXN-1234567890\",\n  \"message\": \"Payment completed successfully\"\n}"
-            },
-            {
-              "name": "Failed Payment Response",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"paymentMethod\": \"aba\",\n  \"providerTransactionId\": \"INVALID-TXN\"\n}"
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/payments/:orderId/confirm",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "payments", ":orderId", "confirm"],
-                  "variable": [
-                    {
-                      "key": "orderId",
-                      "value": "673a1234567890abcdef1234"
-                    }
-                  ]
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"success\": false,\n  \"data\": {\n    \"id\": \"673a1234567890abcdef1234\",\n    \"orderNumber\": \"ORD-L8K9M2N-X7Y3\",\n    \"status\": \"pending_payment\",\n    \"paymentStatus\": \"failed\",\n    \"total\": 25.50\n  },\n  \"message\": \"Payment verification failed\"\n}"
-            }
-          ]
+            "url": "{{baseUrl}}/api/favorites/:productId"
+          }
         },
         {
-          "name": "Mock Payment Complete (Development)",
+          "name": "Remove Favorite",
           "request": {
-            "method": "POST",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{accessToken}}",
                 "type": "text"
-              },
+              }
+            ],
+            "url": "{{baseUrl}}/api/favorites/:productId"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search?q=coffee",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "coffee"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Suggestions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/search/suggestions?q=cof",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "search", "suggestions"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "cof"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Recent Searches",
+          "request": {
+            "method": "GET",
+            "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json",
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
                 "type": "text"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/payments/mock/:orderId/complete",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "payments", "mock", ":orderId", "complete"],
-              "variable": [
-                {
-                  "key": "orderId",
-                  "value": "{{orderId}}",
-                  "description": "Order ID to complete mock payment for"
-                }
-              ]
-            },
-            "description": "Mock payment completion endpoint for development and testing. This endpoint is ONLY available when NODE_ENV is not 'production'. It immediately marks the order as paid without actual payment processing. Useful for testing order flows without integrating real payment providers."
-          },
-          "response": [
-            {
-              "name": "Success Response",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/payments/mock/:orderId/complete",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "payments", "mock", ":orderId", "complete"],
-                  "variable": [
-                    {
-                      "key": "orderId",
-                      "value": "673a1234567890abcdef1234"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"success\": true,\n  \"message\": \"Mock payment completed successfully\"\n}"
-            },
-            {
-              "name": "Production Environment Error",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/payments/mock/:orderId/complete",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "payments", "mock", ":orderId", "complete"],
-                  "variable": [
-                    {
-                      "key": "orderId",
-                      "value": "673a1234567890abcdef1234"
-                    }
-                  ]
-                }
-              },
-              "status": "Forbidden",
-              "code": 403,
-              "_postman_previewlanguage": "json",
-              "header": [
-                {
-                  "key": "Content-Type",
-                  "value": "application/json"
-                }
-              ],
-              "body": "{\n  \"success\": false,\n  \"error\": \"Mock payment endpoint is not available in production\"\n}"
-            }
-          ]
+            "url": "{{baseUrl}}/api/search/recent"
+          }
         }
       ]
     }
@@ -899,12 +775,7 @@
       "type": "string"
     },
     {
-      "key": "checkoutSessionId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "orderId",
+      "key": "refreshToken",
       "value": "",
       "type": "string"
     }

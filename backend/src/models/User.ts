@@ -25,6 +25,12 @@ export interface IUser extends Document {
     pushNotifications: boolean;
     language: 'en' | 'km';
     currency: 'USD' | 'KHR';
+    notifications?: {
+      orderUpdates?: boolean;
+      promotions?: boolean;
+      announcements?: boolean;
+      systemNotifications?: boolean;
+    };
   };
   status: 'active' | 'suspended' | 'deleted';
   lastLoginAt?: Date;
@@ -132,6 +138,24 @@ const userSchema = new Schema<IUser>(
         type: String,
         enum: ['USD', 'KHR'],
         default: 'USD',
+      },
+      notifications: {
+        orderUpdates: {
+          type: Boolean,
+          default: true,
+        },
+        promotions: {
+          type: Boolean,
+          default: true,
+        },
+        announcements: {
+          type: Boolean,
+          default: true,
+        },
+        systemNotifications: {
+          type: Boolean,
+          default: true,
+        },
       },
     },
     status: {
