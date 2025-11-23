@@ -1,23 +1,76 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError.js';
+import { ErrorCodes } from '../utils/errorCodes.js';
 
 export const errorHandler = (
-  err: Error | AppError,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  err: any,
   _req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction
 ) => {
-  console.error(err.stack);
+  console.error(err);
 
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      message: err.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+  let error = { ...err };
+  error.message = err.message;
+  error.stack = err.stack;
+
+  // Handle Mongoose CastError (Invalid ID)
+  if (err.name === 'CastError') {
+    const message = `Resource not found. Invalid ${err.path}: ${err.value}`;
+    error = new AppError(message, 404, ErrorCodes.VAL_INVALID_ID);
+  }
+
+  // Handle Mongoose Duplicate Key Error
+  if (err.code === 11000) {
+    const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+    const message = `Duplicate field value: ${value}. Please use another value!`;
+    error = new AppError(message, 400, ErrorCodes.RES_ALREADY_EXISTS);
+  }
+
+  // Handle Mongoose ValidationError
+  if (err.name === 'ValidationError') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errors = Object.values(err.errors).map((el: any) => el.message);
+    const message = `Invalid input data. ${errors.join('. ')}`;
+    error = new AppError(message, 400, ErrorCodes.VAL_INVALID_INPUT, errors);
+  }
+
+  // Handle JWT Invalid Token
+  if (err.name === 'JsonWebTokenError') {
+    error = new AppError(
+      'Invalid token. Please log in again!',
+      401,
+      ErrorCodes.AUTH_INVALID_TOKEN
+    );
+  }
+
+  // Handle JWT Expired Token
+  if (err.name === 'TokenExpiredError') {
+    error = new AppError(
+      'Your token has expired! Please log in again.',
+      401,
+      ErrorCodes.AUTH_TOKEN_EXPIRED
+    );
+  }
+
+  // Send Response
+  if (error instanceof AppError) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+      errorCode: error.errorCode,
+      errors: error.errors,
+      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
     });
   }
 
-  res.status(500).json({
-    message: err.message || 'Internal Server Error',
+  // Generic Error
+  return res.status(500).json({
+    success: false,
+    message: 'Internal Server Error',
+    errorCode: ErrorCodes.SYS_INTERNAL_ERROR,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };

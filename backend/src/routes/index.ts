@@ -16,6 +16,7 @@ import notificationRoutes from './notificationRoutes.js';
 import announcementRoutes from './announcementRoutes.js';
 import reportRoutes from './reportRoutes.js';
 import supportRoutes from './supportRoutes.js';
+import configRoutes from './configRoutes.js';
 
 import addonRoutes from './addonRoutes.js';
 
@@ -39,5 +40,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/announcements', announcementRoutes);
 router.use('/reports', reportRoutes);
 router.use('/support', supportRoutes);
+router.use('/config', configRoutes);
 
 export default router;
