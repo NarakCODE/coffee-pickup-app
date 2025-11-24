@@ -125,7 +125,7 @@ describe('Authentication API', () => {
   describe('POST /api/auth/logout', () => {
     it('should logout user', async () => {
       // First login
-      const user = await createTestUser({
+      await createTestUser({
         email: 'logout@example.com',
         password: 'Logout123!',
         emailVerified: true,

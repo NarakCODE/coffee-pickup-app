@@ -1,95 +1,171 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import * as productService from '../../../src/services/productService.js';
-import { Product } from '../../../src/models/Product.js';
-import { Category } from '../../../src/models/Category.js';
 import {
+  createTestStore,
   createTestCategory,
   createTestProduct,
 } from '../../utils/testHelpers.js';
 
 describe('ProductService', () => {
+  let storeId: string;
   let categoryId: string;
 
   beforeEach(async () => {
+    const store = await createTestStore();
     const category = await createTestCategory();
-    categoryId = category._id.toString();
+    storeId = store.id;
+    categoryId = category.id;
   });
 
-  describe('createProduct', () => {
-    it('should create a new product', async () => {
-      const productData = {
-        name: 'New Coffee',
-        description: 'Freshly brewed',
-        basePrice: 4.5,
-        categoryId,
-        preparationTime: 5,
-      };
+  describe('getProducts', () => {
+    beforeEach(async () => {
+      await createTestProduct(categoryId, { name: 'Product 1', storeId });
+      await createTestProduct(categoryId, { name: 'Product 2', storeId });
+      await createTestProduct(categoryId, {
+        name: 'Product 3',
+        storeId,
+        isAvailable: false,
+      });
+    });
 
-      const product = await productService.createProduct(productData);
+    it('should return all products', async () => {
+      const result = await productService.getProducts({});
 
-      expect(product).toBeDefined();
-      expect(product.name).toBe(productData.name);
-      expect(product.slug).toBe('new-coffee');
+      expect(result.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should filter by availability', async () => {
+      const result = await productService.getProducts({ isAvailable: true });
+
+      expect(result.data.every((p) => p.isAvailable === true)).toBe(true);
+    });
+
+    it('should filter by category', async () => {
+      const result = await productService.getProducts({ categoryId });
+
+      expect(
+        result.data.every((p) => p.categoryId.toString() === categoryId)
+      ).toBe(true);
+    });
+
+    it('should support pagination', async () => {
+      const result = await productService.getProducts(
+        {},
+        { page: 1, limit: 2 }
+      );
+
+      expect(result.data.length).toBeLessThanOrEqual(2);
+      expect(result.pagination).toBeDefined();
     });
   });
 
   describe('getProductById', () => {
     it('should return product by id', async () => {
-      const product = await createTestProduct(categoryId);
-      const foundProduct = await productService.getProductById(
-        product._id.toString()
-      );
+      const product = await createTestProduct(categoryId, { storeId });
 
-      expect(foundProduct).toBeDefined();
-      expect(foundProduct?._id.toString()).toBe(product._id.toString());
+      const found = await productService.getProductById(product.id);
+
+      expect(found).toBeDefined();
+      expect(found.name).toBe(product.name);
     });
 
-    it('should return null for non-existent product', async () => {
-      // Use a valid but non-existent ObjectId
-      const nonExistentId = '507f1f77bcf86cd799439011';
-      try {
-        const result = await productService.getProductById(nonExistentId);
-        // Depending on implementation, it might return null or throw.
-        // Usually services throw if not found or return null.
-        // Let's assume it throws based on common patterns or returns null.
-        // If it throws, this test needs to handle it.
-        // Let's check if it returns null or throws.
-        // If I can't check, I'll assume it might throw a specific error or return null.
-        // For now, let's assume it throws a NotFoundError or similar if strict, or returns null.
-        // I'll check for null first.
-        if (result === null) {
-          expect(result).toBeNull();
-        }
-      } catch (e) {
-        expect(e).toBeDefined();
-      }
+    it('should throw error for non-existent product', async () => {
+      await expect(
+        productService.getProductById('507f1f77bcf86cd799439011')
+      ).rejects.toThrow('Product not found');
+    });
+  });
+
+  describe('createProduct', () => {
+    it('should create a new product', async () => {
+      const productData = {
+        name: 'New Product',
+        description: 'Test description',
+        categoryId,
+        storeId,
+        basePrice: 15.99,
+        currency: 'USD',
+        preparationTime: 10,
+      };
+
+      const product = await productService.createProduct(productData);
+
+      expect(product).toBeDefined();
+      expect(product.name).toBe('New Product');
+      expect(product.basePrice).toBe(15.99);
+    });
+
+    it('should generate slug from name', async () => {
+      const productData = {
+        name: 'Test Product Name',
+        description: 'Test description',
+        categoryId,
+        storeId,
+        basePrice: 10.0,
+        currency: 'USD',
+        preparationTime: 10,
+      };
+
+      const product = await productService.createProduct(productData);
+
+      expect(product.slug).toBe('test-product-name');
     });
   });
 
   describe('updateProduct', () => {
-    it('should update product details', async () => {
-      const product = await createTestProduct(categoryId);
-      const updateData = { name: 'Updated Coffee' };
+    it('should update product', async () => {
+      const product = await createTestProduct(categoryId, { storeId });
 
-      const updatedProduct = await productService.updateProduct(
-        product._id.toString(),
-        updateData
-      );
+      const updated = await productService.updateProduct(product.id, {
+        name: 'Updated Product',
+        basePrice: 20.0,
+      });
 
-      expect(updatedProduct).toBeDefined();
-      expect(updatedProduct?.name).toBe('Updated Coffee');
-      expect(updatedProduct?.slug).toBe('updated-coffee');
+      expect(updated.name).toBe('Updated Product');
+      expect(updated.basePrice).toBe(20.0);
     });
   });
 
   describe('deleteProduct', () => {
-    it('should delete product', async () => {
-      const product = await createTestProduct(categoryId);
+    it('should soft delete product', async () => {
+      const product = await createTestProduct(categoryId, { storeId });
 
-      await productService.deleteProduct(product._id.toString());
+      await productService.deleteProduct(product.id);
 
-      const foundProduct = await Product.findById(product._id);
-      expect(foundProduct).toBeNull();
+      await expect(productService.getProductById(product.id)).rejects.toThrow(
+        'Product not found'
+      );
+    });
+  });
+
+  describe('updateProductStatus', () => {
+    it('should update product availability', async () => {
+      const product = await createTestProduct(categoryId, {
+        storeId,
+        isAvailable: true,
+      });
+
+      const updated = await productService.updateProductStatus(
+        product.id,
+        false
+      );
+
+      expect(updated.isAvailable).toBe(false);
+    });
+  });
+
+  describe('duplicateProduct', () => {
+    it('should duplicate product with "Copy" suffix', async () => {
+      const original = await createTestProduct(categoryId, {
+        name: 'Original Product',
+        storeId,
+      });
+
+      const duplicate = await productService.duplicateProduct(original.id);
+
+      expect(duplicate.name).toBe('Original Product - Copy');
+      expect(duplicate.id).not.toBe(original.id);
+      expect(duplicate.basePrice).toBe(original.basePrice);
     });
   });
 });
