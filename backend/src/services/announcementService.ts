@@ -91,9 +91,18 @@ export const announcementService = {
   /**
    * Get active announcements for a user (or guest)
    */
+
   async getActiveAnnouncements(userId?: string): Promise<IAnnouncement[]> {
     const now = new Date();
-    const query: any = {
+
+    interface Query {
+      isActive: boolean;
+      startDate: { $lte: Date };
+      endDate: { $gte: Date };
+      $or?: { targetAudience: string }[];
+      targetAudience?: string;
+    }
+    const query: Query = {
       isActive: true,
       startDate: { $lte: now },
       endDate: { $gte: now },

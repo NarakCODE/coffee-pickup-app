@@ -439,11 +439,11 @@ export const getProductsByCategory = async (
  * @returns Updated product
  * @throws NotFoundError if product not found
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const updateProductStatus = async (
   productId: string,
   isAvailable: boolean
-): Promise<any> => {
+): Promise<ProductResponse> => {
   if (!mongoose.Types.ObjectId.isValid(productId)) {
     throw new BadRequestError('Invalid product ID');
   }
@@ -464,11 +464,15 @@ export const updateProductStatus = async (
     .populate('categoryId', 'name slug imageUrl icon')
     .lean();
 
+  if (!updatedProduct) {
+    throw new NotFoundError('Product not found');
+  }
+
   return {
     ...updatedProduct,
-    id: updatedProduct?._id?.toString(),
-    category: updatedProduct?.categoryId,
-  };
+    id: updatedProduct._id.toString(),
+    category: updatedProduct.categoryId,
+  } as unknown as ProductResponse;
 };
 
 /**

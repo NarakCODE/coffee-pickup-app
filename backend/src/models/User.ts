@@ -26,10 +26,10 @@ export interface IUser extends Document {
     language: 'en' | 'km';
     currency: 'USD' | 'KHR';
     notifications?: {
-      orderUpdates?: boolean;
-      promotions?: boolean;
-      announcements?: boolean;
-      systemNotifications?: boolean;
+      orderUpdates?: boolean | undefined;
+      promotions?: boolean | undefined;
+      announcements?: boolean | undefined;
+      systemNotifications?: boolean | undefined;
     };
   };
   status: 'active' | 'suspended' | 'deleted';

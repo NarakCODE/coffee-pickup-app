@@ -3,6 +3,21 @@ import { reportService } from '../services/reportService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { BadRequestError } from '../utils/AppError.js';
 
+interface ReportDateFilters {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+const parseDateFilters = (
+  startDate?: string,
+  endDate?: string
+): ReportDateFilters => {
+  const filters: ReportDateFilters = {};
+  if (startDate) filters.startDate = new Date(startDate);
+  if (endDate) filters.endDate = new Date(endDate);
+  return filters;
+};
+
 /**
  * Get dashboard stats
  * GET /reports/dashboard
@@ -10,10 +25,10 @@ import { BadRequestError } from '../utils/AppError.js';
 export const getDashboardStats = asyncHandler(
   async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
-
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const stats = await reportService.getDashboardStats(filters);
 
@@ -31,10 +46,10 @@ export const getDashboardStats = asyncHandler(
 export const getSalesReport = asyncHandler(
   async (req: Request, res: Response) => {
     const { startDate, endDate, groupBy } = req.query;
-
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const report = await reportService.getSalesReport(
       filters,
@@ -55,10 +70,10 @@ export const getSalesReport = asyncHandler(
 export const getOrdersReport = asyncHandler(
   async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
-
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const report = await reportService.getOrdersReport(filters);
 
@@ -76,10 +91,10 @@ export const getOrdersReport = asyncHandler(
 export const getProductPerformance = asyncHandler(
   async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
-
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const report = await reportService.getProductPerformance(filters);
 
@@ -97,10 +112,10 @@ export const getProductPerformance = asyncHandler(
 export const getRevenueAnalytics = asyncHandler(
   async (req: Request, res: Response) => {
     const { startDate, endDate } = req.query;
-
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const report = await reportService.getRevenueAnalytics(filters);
 
@@ -127,9 +142,10 @@ export const exportReport = asyncHandler(
       throw new BadRequestError('Only CSV format is currently supported');
     }
 
-    const filters: any = {};
-    if (startDate) filters.startDate = new Date(startDate as string);
-    if (endDate) filters.endDate = new Date(endDate as string);
+    const filters = parseDateFilters(
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
 
     const csvData = await reportService.exportReport(type as string, filters);
 

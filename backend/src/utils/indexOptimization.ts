@@ -183,7 +183,16 @@ export async function verifyIndexes(): Promise<void> {
           totalMissing++;
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        logger.error(
+          `Error verifying indexes for ${modelName}:`,
+          error.message
+        );
+      } else {
+        logger.error(`Error verifying indexes for ${modelName}:`, error);
+      }
+    } finally {
       // Silently skip models that don't exist
     }
   }
@@ -214,12 +223,24 @@ export async function createMissingIndexes(): Promise<void> {
             (indexSpec.options || {}) as Record<string, unknown>
           );
           created++;
-        } catch (error) {
-          // Index already exists, skip silently
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            logger.error(
+              `Error creating index for ${modelName}:`,
+              error.message
+            );
+          } else {
+            logger.error(`Error creating index for ${modelName}:`, error);
+          }
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       // Model doesn't exist, skip silently
+      if (error instanceof Error) {
+        logger.error(`Error creating indexes for ${modelName}:`, error.message);
+      } else {
+        logger.error(`Error creating indexes for ${modelName}:`, error);
+      }
     }
   }
 

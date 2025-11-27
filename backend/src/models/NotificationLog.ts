@@ -6,7 +6,7 @@ export interface INotificationLog extends Document {
   recipientCount: number;
   successCount: number;
   failureCount: number;
-  criteria?: Record<string, any>;
+  criteria?: Record<string, unknown>;
   title: string;
   message: string;
   createdAt: Date;
@@ -59,10 +59,9 @@ const notificationLogSchema = new Schema<INotificationLog>(
 
 // Transform JSON output
 notificationLogSchema.set('toJSON', {
-  transform: (doc, ret) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const obj = ret as any;
-    obj.id = obj._id.toString();
+  transform: (_doc, ret) => {
+    const obj = ret as unknown as Record<string, unknown>;
+    obj.id = (obj._id as mongoose.Types.ObjectId).toString();
     delete obj._id;
     delete obj.__v;
     return obj;

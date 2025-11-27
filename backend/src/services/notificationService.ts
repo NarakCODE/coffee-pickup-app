@@ -40,6 +40,32 @@ interface NotificationSettings {
   systemNotifications: boolean;
 }
 
+interface SegmentCriteria {
+  role?: string;
+  loyaltyTier?: string;
+  lastActiveBefore?: string;
+}
+
+interface UserSegmentQuery {
+  isActive: boolean;
+  role?: string;
+  loyaltyTier?: string;
+  lastLoginAt?: { $lt: Date };
+}
+
+interface TypeDistribution {
+  _id: string;
+  count: number;
+}
+
+interface NotificationStats {
+  totalSent: number;
+  readCount: number;
+  unreadCount: number;
+  readRate: number;
+  typeDistribution: TypeDistribution[];
+}
+
 export const notificationService = {
   /**
    * Register a device token for push notifications
@@ -102,7 +128,14 @@ export const notificationService = {
     userId: string,
     filters: NotificationFilters = {}
   ): Promise<INotification[]> {
-    const query: any = { userId: new mongoose.Types.ObjectId(userId) };
+    interface Query {
+      userId: mongoose.Types.ObjectId;
+      type?: string;
+      isRead?: boolean;
+      $or?: { targetAudience: string }[];
+      targetAudience?: string;
+    }
+    const query: Query = { userId: new mongoose.Types.ObjectId(userId) };
 
     if (filters.type) {
       query.type = filters.type;
@@ -232,19 +265,11 @@ export const notificationService = {
       throw new NotFoundError('User not found');
     }
 
-    // Update user preferences
-    if (!user.preferences) {
-      user.preferences = {} as any;
-    }
-
-    if (!user.preferences.notifications) {
-      user.preferences.notifications = {} as any;
-    }
-
-    user.preferences.notifications = {
-      ...user.preferences.notifications,
+    // Update user preferences - use set() to handle nested updates properly
+    user.set('preferences.notifications', {
+      ...user.preferences?.notifications,
       ...settings,
-    };
+    });
 
     await user.save();
   },
@@ -378,11 +403,11 @@ export const notificationService = {
    */
   async sendToSegment(
     adminId: string,
-    criteria: Record<string, any>,
+    criteria: SegmentCriteria,
     data: CreateNotificationDTO
   ): Promise<INotificationLog> {
     // Build query based on criteria
-    const query: any = { isActive: true };
+    const query: UserSegmentQuery = { isActive: true };
 
     if (criteria.role) {
       query.role = criteria.role;
@@ -437,7 +462,7 @@ export const notificationService = {
   /**
    * Admin: Get notification statistics
    */
-  async getStats(): Promise<any> {
+  async getStats(): Promise<NotificationStats> {
     const totalSent = await Notification.countDocuments();
     const readCount = await Notification.countDocuments({ isRead: true });
     const unreadCount = await Notification.countDocuments({ isRead: false });
@@ -446,7 +471,7 @@ export const notificationService = {
     const readRate = totalSent > 0 ? (readCount / totalSent) * 100 : 0;
 
     // Get distribution by type
-    const typeDistribution = await Notification.aggregate([
+    const typeDistribution = await Notification.aggregate<TypeDistribution>([
       { $group: { _id: '$type', count: { $sum: 1 } } },
     ]);
 

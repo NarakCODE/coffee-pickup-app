@@ -55,7 +55,7 @@ export const deleteAddOn = async (id: string): Promise<void> => {
 
 export const getAddOnsByProductId = async (
   productId: string
-): Promise<any[]> => {
+): Promise<unknown[]> => {
   const productAddOns = await ProductAddOn.find({ productId })
     .populate('addOnId')
     .lean();
