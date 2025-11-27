@@ -1,9 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
-import { authenticate } from '../../../src/middlewares/auth.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+  authenticate,
+  optionalAuthenticate,
+} from '../../../src/middlewares/auth.js';
 import { generateAuthToken, createTestUser } from '../../utils/testHelpers.js';
 import type { Request, Response, NextFunction } from 'express';
+import { UnauthorizedError } from '../../../src/utils/AppError.js';
 
 describe('Auth Middleware', () => {
+  let mockNext: ReturnType<typeof vi.fn>;
+
   const mockRequest = (authHeader?: string) =>
     ({
       headers: {
@@ -18,47 +24,167 @@ describe('Auth Middleware', () => {
     return res;
   };
 
-  const mockNext = vi.fn() as NextFunction;
-
-  it('should authenticate with valid token', async () => {
-    const user = await createTestUser();
-    const token = generateAuthToken(user.id, 'user');
-    const req = mockRequest(`Bearer ${token}`);
-    const res = mockResponse();
-
-    await authenticate(req, res, mockNext);
-
-    expect(mockNext).toHaveBeenCalled();
-    expect(req.userId).toBe(user.id);
+  beforeEach(() => {
+    mockNext = vi.fn();
   });
 
-  it('should reject request without token', async () => {
-    const req = mockRequest();
-    const res = mockResponse();
+  describe('authenticate', () => {
+    it('should authenticate with valid token and active user', async () => {
+      const user = await createTestUser({
+        email: `auth-test-${Date.now()}@example.com`,
+      });
+      const token = generateAuthToken(user.id, 'user');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
 
-    await authenticate(req, res, mockNext);
+      await authenticate(req, res, mockNext);
 
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(mockNext).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(req.userId).toBe(user.id);
+      expect(req.userRole).toBe('user');
+    });
+
+    it('should reject request without authorization header', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('should reject request with invalid token format (no Bearer prefix)', async () => {
+      const req = mockRequest('InvalidFormat token123');
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('should reject request with empty token after Bearer', async () => {
+      const req = mockRequest('Bearer ');
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('should reject request with invalid JWT token', async () => {
+      const req = mockRequest('Bearer invalid.jwt.token');
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+    });
+
+    it('should reject request for suspended user', async () => {
+      const user = await createTestUser({
+        email: `suspended-${Date.now()}@example.com`,
+        status: 'suspended',
+      });
+      const token = generateAuthToken(user.id, 'user');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+      const error = mockNext.mock.calls[0][0] as UnauthorizedError;
+      expect(error.message).toContain('suspended');
+    });
+
+    it('should reject request for deleted user', async () => {
+      const user = await createTestUser({
+        email: `deleted-${Date.now()}@example.com`,
+        status: 'deleted',
+      });
+      const token = generateAuthToken(user.id, 'user');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+      const error = mockNext.mock.calls[0][0] as UnauthorizedError;
+      expect(error.message).toContain('deleted');
+    });
+
+    it('should reject request for non-existent user', async () => {
+      const token = generateAuthToken('507f1f77bcf86cd799439011', 'user');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
+    });
+
+    it('should set userRole correctly for admin', async () => {
+      const admin = await createTestUser({
+        email: `admin-${Date.now()}@example.com`,
+        role: 'admin',
+      });
+      const token = generateAuthToken(admin.id, 'admin');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
+
+      await authenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(req.userRole).toBe('admin');
+    });
   });
 
-  it('should reject request with invalid token format', async () => {
-    const req = mockRequest('InvalidFormat token123');
-    const res = mockResponse();
+  describe('optionalAuthenticate', () => {
+    it('should authenticate with valid token', async () => {
+      const user = await createTestUser({
+        email: `optional-${Date.now()}@example.com`,
+      });
+      const token = generateAuthToken(user.id, 'user');
+      const req = mockRequest(`Bearer ${token}`);
+      const res = mockResponse();
 
-    await authenticate(req, res, mockNext);
+      await optionalAuthenticate(req, res, mockNext);
 
-    expect(res.status).toHaveBeenCalledWith(401);
-  });
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(req.userId).toBe(user.id);
+    });
 
-  it('should reject request with expired token', async () => {
-    const expiredToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJleHAiOjF9.invalid';
-    const req = mockRequest(`Bearer ${expiredToken}`);
-    const res = mockResponse();
+    it('should proceed without error when no token provided', async () => {
+      const req = mockRequest();
+      const res = mockResponse();
 
-    await authenticate(req, res, mockNext);
+      await optionalAuthenticate(req, res, mockNext);
 
-    expect(res.status).toHaveBeenCalledWith(401);
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(req.userId).toBeUndefined();
+    });
+
+    it('should proceed without error when invalid token provided', async () => {
+      const req = mockRequest('Bearer invalid.token.here');
+      const res = mockResponse();
+
+      await optionalAuthenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).not.toHaveBeenCalledWith(expect.any(Error));
+      expect(req.userId).toBeUndefined();
+    });
+
+    it('should proceed without error when token format is wrong', async () => {
+      const req = mockRequest('WrongFormat token');
+      const res = mockResponse();
+
+      await optionalAuthenticate(req, res, mockNext);
+
+      expect(mockNext).toHaveBeenCalled();
+      expect(req.userId).toBeUndefined();
+    });
   });
 });
