@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { SessionTimeoutHandler } from "@/components/auth/session-timeout-handler";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -32,7 +33,10 @@ export default function RootLayout({
             >
                 <ThemeProvider>
                     <QueryProvider>
-                        <AuthProvider>{children}</AuthProvider>
+                        <AuthProvider>
+                            <SessionTimeoutHandler />
+                            {children}
+                        </AuthProvider>
                     </QueryProvider>
                 </ThemeProvider>
             </body>

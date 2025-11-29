@@ -169,28 +169,28 @@
 
 ## Phase 3: Authentication Pages
 
--   [ ] 10. Create authentication pages
+-   [x] 10. Create authentication pages
 
-    -   [ ] 10.1 Create login page at app/(auth)/login/page.tsx
-        -   Implement login form with email and password fields
+    -   [x] 10.1 Create login page at `app/(auth)/login/page.tsx`
+        -   Implement login form with email/password
         -   Add form validation with Zod schema
         -   Handle login submission and error display
         -   Use router.push to redirect to dashboard on success
         -   _Requirements: 1.1, 1.2, 1.3, 1.4_
-    -   [ ] 10.2 Implement session timeout handling
+    -   [x] 10.2 Implement session timeout handling
         -   Display warning before session expires (30 min inactivity)
         -   Redirect to login on session expiration
         -   Implement activity tracking for timeout reset
         -   _Requirements: 14.1, 14.2_
-    -   [ ]\* 10.3 Write property test for token expiration handling
-        -   **Property 3: Token Expiration Handling**
-        -   **Validates: Requirements 1.6, 14.6**
-    -   [ ]\* 10.4 Write property test for session expiration redirect
-        -   **Property 21: Session Expiration Redirect**
+    -   [x] 10.3 Write property test for token expiration handling
+        -   **Property 19: Token Expiration**
         -   **Validates: Requirements 14.2**
-    -   [ ] 10.5 Create error pages
-        -   Create app/not-found.tsx (404)
-        -   Create app/(dashboard)/unauthorized/page.tsx (403)
+    -   [x] 10.4 Write property test for session expiration redirect
+        -   **Property 18: Session Expiration**
+        -   **Validates: Requirements 14.1**
+    -   [x] 10.5 Create error pages
+        -   Create `app/not-found.tsx` (404)
+        -   Create `app/(dashboard)/unauthorized/page.tsx` (403)
         -   _Requirements: 4.6_
 
 -   [ ] 11. Checkpoint - Ensure all tests pass
