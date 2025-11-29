@@ -25,7 +25,7 @@ export const reportService = {
     // Total Revenue
     const revenueResult = await Order.aggregate([
       { $match: query },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      { $group: { _id: null, total: { $sum: '$total' } } },
     ]);
     const totalRevenue = revenueResult[0]?.total || 0;
 
@@ -33,18 +33,26 @@ export const reportService = {
     const totalOrders = await Order.countDocuments(query);
 
     // Active Users
-    const activeUsers = await User.countDocuments({ isActive: true });
+    const activeUsers = await User.countDocuments({ status: 'active' });
 
     // Top Selling Products (Limit 5)
     const topProducts = await Order.aggregate([
       { $match: query },
+      {
+        $lookup: {
+          from: 'orderitems',
+          localField: '_id',
+          foreignField: 'orderId',
+          as: 'items',
+        },
+      },
       { $unwind: '$items' },
       {
         $group: {
           _id: '$items.productId',
-          name: { $first: '$items.name' },
+          name: { $first: '$items.productName' },
           totalSold: { $sum: '$items.quantity' },
-          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          revenue: { $sum: '$items.totalPrice' },
         },
       },
       { $sort: { totalSold: -1 } },
@@ -84,7 +92,7 @@ export const reportService = {
       {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: '$createdAt' } },
-          revenue: { $sum: '$totalAmount' },
+          revenue: { $sum: '$total' },
           orders: { $sum: 1 },
         },
       },
@@ -132,13 +140,21 @@ export const reportService = {
 
     const products = await Order.aggregate([
       { $match: query },
+      {
+        $lookup: {
+          from: 'orderitems',
+          localField: '_id',
+          foreignField: 'orderId',
+          as: 'items',
+        },
+      },
       { $unwind: '$items' },
       {
         $group: {
           _id: '$items.productId',
-          name: { $first: '$items.name' },
+          name: { $first: '$items.productName' },
           quantitySold: { $sum: '$items.quantity' },
-          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          revenue: { $sum: '$items.totalPrice' },
         },
       },
       { $sort: { revenue: -1 } },
@@ -167,7 +183,7 @@ export const reportService = {
       {
         $group: {
           _id: '$storeId',
-          revenue: { $sum: '$totalAmount' },
+          revenue: { $sum: '$total' },
           orders: { $sum: 1 },
         },
       },
@@ -198,6 +214,11 @@ export const reportService = {
         data = await this.getProductPerformance(filters);
         headers = ['Product Name', 'Quantity Sold', 'Revenue'];
         data = data.map((row) => [row.name, row.quantitySold, row.revenue]);
+        break;
+      case 'orders':
+        data = await this.getOrdersReport(filters);
+        headers = ['Status', 'Count'];
+        data = data.map((row) => [row._id, row.count]);
         break;
       default:
         throw new Error('Invalid report type');
