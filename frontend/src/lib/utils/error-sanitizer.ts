@@ -12,7 +12,7 @@ export function sanitizeErrorMessage(error: unknown): string {
     }
 
     if (typeof error === "object" && error !== null && "message" in error) {
-        return sanitizeString((error as any).message);
+        return sanitizeString((error as Error).message);
     }
 
     return "An unexpected error occurred. Please try again.";
