@@ -3,7 +3,7 @@ import { ApiResponse, ApiError } from "@/types/api";
 import { useAuthStore } from "@/store/auth.store";
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { API_BASE_URL } from "@/lib/utils/constants";
 const API_TIMEOUT = 30000; // 30 seconds
 
 // Custom error class for API errors
@@ -99,7 +99,7 @@ class AxiosApiClient {
                                 accessToken: string;
                                 refreshToken: string;
                             }>
-                        >(`${API_BASE_URL}/api/auth/refresh`, { refreshToken });
+                        >(`${API_BASE_URL}/auth/refresh`, { refreshToken });
 
                         const {
                             accessToken: newAccessToken,
@@ -352,7 +352,7 @@ class FetchApiClient {
             }
 
             // Refresh the token
-            const response = await fetch(`${this.baseURL}/api/auth/refresh`, {
+            const response = await fetch(`${this.baseURL}/auth/refresh`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

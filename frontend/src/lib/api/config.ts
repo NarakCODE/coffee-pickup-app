@@ -1,8 +1,10 @@
 // API Configuration
 
+import { API_BASE_URL } from "@/lib/utils/constants";
+
 export const apiConfig = {
     // Base URL for the API
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+    baseURL: API_BASE_URL,
 
     // Timeout for requests (in milliseconds)
     timeout: 30000, // 30 seconds
@@ -11,115 +13,112 @@ export const apiConfig = {
     endpoints: {
         // Auth
         auth: {
-            login: "/api/auth/login",
-            register: "/api/auth/register",
-            logout: "/api/auth/logout",
-            refresh: "/api/auth/refresh",
-            verifyEmail: "/api/auth/verify-email",
-            resendVerification: "/api/auth/resend-verification",
-            forgotPassword: "/api/auth/forgot-password",
-            resetPassword: "/api/auth/reset-password",
-            me: "/api/auth/me",
+            login: "/auth/login",
+            register: "/auth/register",
+            logout: "/auth/logout",
+            refresh: "/auth/refresh",
+            verifyEmail: "/auth/verify-email",
+            resendVerification: "/auth/resend-verification",
+            forgotPassword: "/auth/forgot-password",
+            resetPassword: "/auth/reset-password",
+            me: "/auth/me",
         },
 
         // Users
         users: {
-            list: "/api/users",
-            get: (id: string) => `/api/users/${id}`,
-            update: (id: string) => `/api/users/${id}`,
-            delete: (id: string) => `/api/users/${id}`,
-            updateRole: (id: string) => `/api/users/${id}/role`,
+            list: "/users",
+            get: (id: string) => `/users/${id}`,
+            update: (id: string) => `/users/${id}`,
+            delete: (id: string) => `/users/${id}`,
+            updateRole: (id: string) => `/users/${id}/role`,
         },
 
         // Products
         products: {
-            list: "/api/products",
-            get: (id: string) => `/api/products/${id}`,
-            create: "/api/products",
-            update: (id: string) => `/api/products/${id}`,
-            delete: (id: string) => `/api/products/${id}`,
-            toggleAvailability: (id: string) =>
-                `/api/products/${id}/availability`,
+            list: "/products",
+            get: (id: string) => `/products/${id}`,
+            create: "/products",
+            update: (id: string) => `/products/${id}`,
+            delete: (id: string) => `/products/${id}`,
+            toggleAvailability: (id: string) => `/products/${id}/availability`,
         },
 
         // Orders
         orders: {
-            list: "/api/orders",
-            get: (id: string) => `/api/orders/${id}`,
-            create: "/api/orders",
-            update: (id: string) => `/api/orders/${id}`,
-            updateStatus: (id: string) => `/api/orders/${id}/status`,
-            cancel: (id: string) => `/api/orders/${id}/cancel`,
-            myOrders: "/api/orders/my-orders",
+            list: "/orders",
+            get: (id: string) => `/orders/${id}`,
+            create: "/orders",
+            update: (id: string) => `/orders/${id}`,
+            updateStatus: (id: string) => `/orders/${id}/status`,
+            cancel: (id: string) => `/orders/${id}/cancel`,
+            myOrders: "/orders/my-orders",
         },
 
         // Cart
         cart: {
-            get: "/api/cart",
-            addItem: "/api/cart/items",
-            updateItem: (itemId: string) => `/api/cart/items/${itemId}`,
-            removeItem: (itemId: string) => `/api/cart/items/${itemId}`,
-            clear: "/api/cart",
+            get: "/cart",
+            addItem: "/cart/items",
+            updateItem: (itemId: string) => `/cart/items/${itemId}`,
+            removeItem: (itemId: string) => `/cart/items/${itemId}`,
+            clear: "/cart",
         },
 
         // Favorites
         favorites: {
-            list: "/api/favorites",
-            add: "/api/favorites",
-            remove: (productId: string) => `/api/favorites/${productId}`,
-            check: (productId: string) => `/api/favorites/${productId}/check`,
+            list: "/favorites",
+            add: "/favorites",
+            remove: (productId: string) => `/favorites/${productId}`,
+            check: (productId: string) => `/favorites/${productId}/check`,
         },
 
         // Notifications
         notifications: {
-            list: "/api/notifications",
-            markAsRead: (id: string) => `/api/notifications/${id}/read`,
-            markAllAsRead: "/api/notifications/read-all",
-            delete: (id: string) => `/api/notifications/${id}`,
+            list: "/notifications",
+            markAsRead: (id: string) => `/notifications/${id}/read`,
+            markAllAsRead: "/notifications/read-all",
+            delete: (id: string) => `/notifications/${id}`,
         },
 
         // Add-ons
         addons: {
-            list: "/api/addons",
-            get: (id: string) => `/api/addons/${id}`,
-            create: "/api/addons",
-            update: (id: string) => `/api/addons/${id}`,
-            delete: (id: string) => `/api/addons/${id}`,
+            list: "/addons",
+            get: (id: string) => `/addons/${id}`,
+            create: "/addons",
+            update: (id: string) => `/addons/${id}`,
+            delete: (id: string) => `/addons/${id}`,
         },
 
         // Reports (Admin)
         reports: {
-            dashboard: "/api/reports/dashboard",
-            sales: "/api/reports/sales",
-            orders: "/api/reports/orders",
-            products: "/api/reports/products",
-            revenue: "/api/reports/revenue",
-            export: "/api/reports/export",
+            dashboard: "/reports/dashboard",
+            sales: "/reports/sales",
+            orders: "/reports/orders",
+            products: "/reports/products",
+            revenue: "/reports/revenue",
+            export: "/reports/export",
         },
 
         // Config (Admin)
         config: {
-            get: "/api/config",
-            update: "/api/config",
-            deliveryZones: "/api/config/delivery-zones",
-            createDeliveryZone: "/api/config/delivery-zones",
-            updateDeliveryZone: (id: string) =>
-                `/api/config/delivery-zones/${id}`,
-            deleteDeliveryZone: (id: string) =>
-                `/api/config/delivery-zones/${id}`,
+            get: "/config",
+            update: "/config",
+            deliveryZones: "/config/delivery-zones",
+            createDeliveryZone: "/config/delivery-zones",
+            updateDeliveryZone: (id: string) => `/config/delivery-zones/${id}`,
+            deleteDeliveryZone: (id: string) => `/config/delivery-zones/${id}`,
         },
 
         // Support
         support: {
-            tickets: "/api/support/tickets",
-            createTicket: "/api/support/tickets",
-            getTicket: (id: string) => `/api/support/tickets/${id}`,
-            updateTicket: (id: string) => `/api/support/tickets/${id}`,
-            addMessage: (id: string) => `/api/support/tickets/${id}/messages`,
+            tickets: "/support/tickets",
+            createTicket: "/support/tickets",
+            getTicket: (id: string) => `/support/tickets/${id}`,
+            updateTicket: (id: string) => `/support/tickets/${id}`,
+            addMessage: (id: string) => `/support/tickets/${id}/messages`,
         },
 
         // Health
-        health: "/api/health",
+        health: "/health",
     },
 
     // Retry configuration
