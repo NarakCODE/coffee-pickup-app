@@ -1,13 +1,21 @@
-// Dashboard layout - will be implemented in Task 5
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { Header } from "@/components/layout/header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+
 export default function DashboardLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar and header will be added in Task 5 */}
-      <main className="p-6">{children}</main>
-    </div>
-  );
+    return (
+        <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+                <Header />
+                <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                    {children}
+                </main>
+            </SidebarInset>
+        </SidebarProvider>
+    );
 }
