@@ -128,28 +128,28 @@
         -   **Property 18: Loading State Display**
         -   **Validates: Requirements 13.5**
 
--   [ ] 7. Create DataTable component
+-   [x] 7. Create DataTable component
 
-    -   [ ] 7.1 Implement DataTable client component with TanStack Table
+    -   [x] 7.1 Implement DataTable client component with TanStack Table
         -   Support column definitions with sorting
         -   Implement pagination controls
         -   Add row selection capability
         -   _Requirements: 3.1, 5.1, 6.1, 7.1_
-    -   [ ]\* 7.2 Write property test for data table rendering consistency
+    -   [x] 7.2 Write property test for data table rendering consistency
         -   **Property 5: Data Table Rendering Consistency**
         -   **Validates: Requirements 3.1, 5.1, 6.1, 7.1**
-    -   [ ] 7.3 Add filtering and search to DataTable
+    -   [x] 7.3 Add filtering and search to DataTable
         -   Implement column filters
         -   Add global search input with debounce
         -   Support filter by status, date range
         -   _Requirements: 3.7, 5.7, 6.6, 7.5_
-    -   [ ]\* 7.4 Write property test for filter result subset
+    -   [x] 7.4 Write property test for filter result subset
         -   **Property 8: Filter Result Subset**
         -   **Validates: Requirements 3.7, 5.7, 6.6, 7.5**
-    -   [ ]\* 7.5 Write property test for search result relevance
+    -   [x] 7.5 Write property test for search result relevance
         -   **Property 9: Search Result Relevance**
         -   **Validates: Requirements 3.7, 7.5**
-    -   [ ]\* 7.6 Write property test for pagination consistency
+    -   [x] 7.6 Write property test for pagination consistency
         -   **Property 16: Pagination Consistency**
         -   **Validates: Requirements 7.1**
 
