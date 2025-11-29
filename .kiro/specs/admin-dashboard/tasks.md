@@ -164,7 +164,7 @@
         -   **Property 17: Theme Persistence**
         -   **Validates: Requirements 13.4**
 
--   [ ] 9. Checkpoint - Ensure all tests pass
+-   [x] 9. Checkpoint - Ensure all tests pass
     -   Ensure all tests pass, ask the user if questions arise.
 
 ## Phase 3: Authentication Pages
