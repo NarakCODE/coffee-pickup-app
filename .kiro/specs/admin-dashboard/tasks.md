@@ -153,14 +153,14 @@
         -   **Property 16: Pagination Consistency**
         -   **Validates: Requirements 7.1**
 
--   [ ] 8. Implement theme system
+-   [x] 8. Implement theme system
 
-    -   [ ] 8.1 Create ThemeProvider with next-themes
+    -   [x] 8.1 Create ThemeProvider with next-themes
         -   Install and configure next-themes for dark/light mode
         -   Persist theme preference automatically
         -   Apply theme class to document root
         -   _Requirements: 13.4_
-    -   [ ]\* 8.2 Write property test for theme persistence
+    -   [x] 8.2 Write property test for theme persistence
         -   **Property 17: Theme Persistence**
         -   **Validates: Requirements 13.4**
 
