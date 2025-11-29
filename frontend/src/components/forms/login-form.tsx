@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +16,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/providers/auth-provider";
-import { api } from "@/lib/api";
+import { useLogin } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { sanitizeErrorMessage } from "@/lib/utils/error-sanitizer";
 
@@ -30,9 +28,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-    const router = useRouter();
-    const { login } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
+    const { mutate: login, isPending } = useLogin();
     const [showPassword, setShowPassword] = useState(false);
 
     const form = useForm<LoginFormValues>({
@@ -43,20 +39,17 @@ export function LoginForm() {
         },
     });
 
-    async function onSubmit(data: LoginFormValues) {
-        setIsLoading(true);
-        try {
-            const response = await api.auth.login(data);
-            login(response);
-            toast.success("Logged in successfully");
-            router.push("/");
-        } catch (error) {
-            const message =
-                error instanceof Error ? error.message : "Failed to login";
-            toast.error(sanitizeErrorMessage(message));
-        } finally {
-            setIsLoading(false);
-        }
+    function onSubmit(data: LoginFormValues) {
+        login(data, {
+            onSuccess: () => {
+                toast.success("Logged in successfully");
+            },
+            onError: (error: unknown) => {
+                const message =
+                    error instanceof Error ? error.message : "Failed to login";
+                toast.error(sanitizeErrorMessage(message));
+            },
+        });
     }
 
     return (
@@ -119,8 +112,8 @@ export function LoginForm() {
                         </FormItem>
                     )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading && (
+                <Button type="submit" className="w-full" disabled={isPending}>
+                    {isPending && (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
                     Sign In
